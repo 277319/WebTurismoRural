@@ -1,8 +1,9 @@
 import math
+from decimal import Decimal
 
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
 from fastapi.concurrency import run_in_threadpool
-from sqlalchemy import func, select
+from sqlalchemy import String, func, select
 from sqlalchemy.orm import Session, joinedload, selectinload
 
 from app.core.archivos import borrar_foto_experiencia, comprimir_imagen, guardar_foto_experiencia, leer_imagen
@@ -10,11 +11,13 @@ from app.core.config import settings
 from app.core.db import get_db
 from app.core.deps import requerir_rol
 from app.models.emprendimiento import Emprendimiento
-from app.models.experiencia import EstadoExperiencia, Experiencia
+from app.models.experiencia import EstadoExperiencia, Experiencia, TipoExperiencia
 from app.models.foto_experiencia import MAX_FOTOS_EXPERIENCIA, FotoExperiencia
 from app.models.usuario import RolUsuario, Usuario
 from app.schemas.experiencia import (
     ExperienciaCrear,
+    ExperienciaEditar,
+    ExperienciaEstado,
     ExperienciaPublica,
     FotoExperienciaPublica,
     OrdenFotos,
@@ -24,6 +27,16 @@ from app.schemas.experiencia import (
 router = APIRouter(prefix="/experiencias", tags=["experiencias"])
 
 solo_anfitrion = requerir_rol(RolUsuario.anfitrion)
+
+# Para buscar localidades sin distinguir tildes: "pucon" encuentra "Pucón"
+CON_TILDE = "áéíóúüàèìòù"
+SIN_TILDE = "aeiouuaeiou"
+QUITAR_TILDES = str.maketrans(CON_TILDE, SIN_TILDE)
+
+
+def normalizar_localidad(columna):
+    """Versión en minúsculas y sin tildes de la columna, calculada por PostgreSQL."""
+    return func.translate(func.lower(columna), CON_TILDE, SIN_TILDE, type_=String)
 
 
 def obtener_propia(experiencia_id: int, usuario: Usuario, db: Session) -> Experiencia:
@@ -36,18 +49,52 @@ def obtener_propia(experiencia_id: int, usuario: Usuario, db: Session) -> Experi
     return experiencia
 
 
+def verificar_emprendimiento_propio(emprendimiento_id: int, usuario: Usuario, db: Session) -> None:
+    """403 si el emprendimiento no existe o no es del usuario (no se distingue, para no revelar cuáles existen)."""
+    emprendimiento = db.get(Emprendimiento, emprendimiento_id)
+    if emprendimiento is None or emprendimiento.usuario_id != usuario.id:
+        raise HTTPException(
+            status.HTTP_403_FORBIDDEN,
+            detail={"campo": "emprendimiento_id", "mensaje": "Solo puedes publicar experiencias en tus emprendimientos"},
+        )
+
+
 @router.get("", response_model=PaginaExperiencias)
 def catalogo(
     pagina: int = Query(1, ge=1, description="Número de página, desde 1"),
     por_pagina: int = Query(12, ge=1, le=50, description="Resultados por página (máx. 50)"),
+    localidad: str | None = Query(
+        None, max_length=100, description="Parte del nombre de la localidad; no distingue mayúsculas ni tildes"
+    ),
+    tipo: list[TipoExperiencia] | None = Query(
+        None, description="Uno o más tipos; se repite el parámetro: ?tipo=pesca&tipo=senderismo"
+    ),
+    precio_min: Decimal | None = Query(None, ge=0, description="Precio por persona mínimo"),
+    precio_max: Decimal | None = Query(None, ge=0, description="Precio por persona máximo (0 = solo gratuitas)"),
     db: Session = Depends(get_db),
 ) -> PaginaExperiencias:
-    """Público: experiencias activas, de la más reciente a la más antigua."""
-    filtro = Experiencia.estado == EstadoExperiencia.activo
-    total = db.scalar(select(func.count()).select_from(Experiencia).where(filtro)) or 0
+    """Público: experiencias activas que cumplen los filtros, de la más reciente a la más antigua."""
+    if precio_min is not None and precio_max is not None and precio_min > precio_max:
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail={"campo": "precio_max", "mensaje": "El precio máximo debe ser mayor o igual al mínimo"},
+        )
+
+    filtros = [Experiencia.estado == EstadoExperiencia.activo]
+    if localidad and localidad.strip():
+        buscado = " ".join(localidad.split()).lower().translate(QUITAR_TILDES)
+        filtros.append(normalizar_localidad(Experiencia.localidad).contains(buscado, autoescape=True))
+    if tipo:
+        filtros.append(Experiencia.tipo.in_(tipo))
+    if precio_min is not None:
+        filtros.append(Experiencia.precio_por_persona >= precio_min)
+    if precio_max is not None:
+        filtros.append(Experiencia.precio_por_persona <= precio_max)
+
+    total = db.scalar(select(func.count()).select_from(Experiencia).where(*filtros)) or 0
     consulta = (
         select(Experiencia)
-        .where(filtro)
+        .where(*filtros)
         .options(joinedload(Experiencia.emprendimiento), selectinload(Experiencia.fotos))
         .order_by(Experiencia.fecha_creacion.desc(), Experiencia.id.desc())
         .offset((pagina - 1) * por_pagina)
@@ -62,18 +109,25 @@ def catalogo(
     )
 
 
+@router.get("/localidades", response_model=list[str])
+def localidades_catalogo(db: Session = Depends(get_db)) -> list[str]:
+    """Público: localidades con experiencias activas, para sugerirlas en el filtro del catálogo."""
+    consulta = (
+        select(Experiencia.localidad)
+        .where(Experiencia.estado == EstadoExperiencia.activo)
+        .distinct()
+        .order_by(Experiencia.localidad)
+    )
+    return list(db.scalars(consulta))
+
+
 @router.post("", response_model=ExperienciaPublica, status_code=status.HTTP_201_CREATED)
 def crear_experiencia(
     datos: ExperienciaCrear,
     usuario: Usuario = Depends(solo_anfitrion),
     db: Session = Depends(get_db),
 ) -> Experiencia:
-    emprendimiento = db.get(Emprendimiento, datos.emprendimiento_id)
-    if emprendimiento is None or emprendimiento.usuario_id != usuario.id:
-        raise HTTPException(
-            status.HTTP_403_FORBIDDEN,
-            detail={"campo": "emprendimiento_id", "mensaje": "Solo puedes publicar experiencias en tus emprendimientos"},
-        )
+    verificar_emprendimiento_propio(datos.emprendimiento_id, usuario, db)
     experiencia = Experiencia(**datos.model_dump())
     db.add(experiencia)
     db.commit()
@@ -94,6 +148,39 @@ def mis_experiencias(
         .order_by(Experiencia.fecha_creacion.desc())
     )
     return list(db.scalars(consulta))
+
+
+@router.put("/{experiencia_id}", response_model=ExperienciaPublica)
+def editar_experiencia(
+    experiencia_id: int,
+    datos: ExperienciaEditar,
+    usuario: Usuario = Depends(solo_anfitrion),
+    db: Session = Depends(get_db),
+) -> Experiencia:
+    """Reemplaza todos los datos de la experiencia. Puede moverse a otro emprendimiento del mismo dueño."""
+    experiencia = obtener_propia(experiencia_id, usuario, db)
+    if datos.emprendimiento_id != experiencia.emprendimiento_id:
+        verificar_emprendimiento_propio(datos.emprendimiento_id, usuario, db)
+    for campo, valor in datos.model_dump().items():
+        setattr(experiencia, campo, valor)
+    db.commit()
+    db.refresh(experiencia)
+    return experiencia
+
+
+@router.patch("/{experiencia_id}/estado", response_model=ExperienciaPublica)
+def cambiar_estado_experiencia(
+    experiencia_id: int,
+    datos: ExperienciaEstado,
+    usuario: Usuario = Depends(solo_anfitrion),
+    db: Session = Depends(get_db),
+) -> Experiencia:
+    """Pausa o reanuda la experiencia. Las pausadas no aparecen en el catálogo público."""
+    experiencia = obtener_propia(experiencia_id, usuario, db)
+    experiencia.estado = datos.estado
+    db.commit()
+    db.refresh(experiencia)
+    return experiencia
 
 
 @router.post(

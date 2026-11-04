@@ -1,23 +1,69 @@
-import { ChevronLeft, ChevronRight, Compass } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Compass, SearchX } from 'lucide-react'
 import { useEffect } from 'react'
-import { Link, useSearchParams } from 'react-router'
-import { catalogoExperiencias } from '../api/experiencias'
+import { useSearchParams } from 'react-router'
+import { catalogoExperiencias, localidadesCatalogo, type TipoExperiencia } from '../api/experiencias'
 import ErrorCarga from '../components/ErrorCarga'
+import FiltrosCatalogo, { type CambiosFiltros } from '../components/FiltrosCatalogo'
 import TarjetaExperiencia from '../components/TarjetaExperiencia'
 import { useCarga } from '../hooks/useCarga'
+import { TIPOS_EXPERIENCIA } from '../tiposExperiencia'
 
 const POR_PAGINA = 12
+const TIPOS_VALIDOS = new Set<string>(TIPOS_EXPERIENCIA.map((t) => t.id))
+
+/** Precio de la URL; se ignora si no es un número válido (p. ej. un enlace editado a mano) */
+function leerPrecio(valor: string | null): number | undefined {
+  return valor && /^\d+(\.\d{1,2})?$/.test(valor) ? Number(valor) : undefined
+}
 
 export default function Catalogo() {
+  // Página y filtros viven en la URL: se pueden compartir y funcionan con atrás/adelante
   const [params, setParams] = useSearchParams()
   const pagina = Math.max(1, Number.parseInt(params.get('pagina') ?? '1', 10) || 1)
-  const { datos, error, cargando, recargar } = useCarga(() => catalogoExperiencias(pagina, POR_PAGINA), [pagina])
+  const localidad = params.get('localidad') ?? ''
+  const tipos = params.getAll('tipo').filter((t): t is TipoExperiencia => TIPOS_VALIDOS.has(t))
+  const precioMin = params.get('precio_min') ?? ''
+  const precioMax = params.get('precio_max') ?? ''
+  const hayFiltros = localidad.trim() !== '' || tipos.length > 0 || leerPrecio(precioMin) !== undefined || leerPrecio(precioMax) !== undefined
+
+  const filtros = { localidad, tipos, precioMin: leerPrecio(precioMin), precioMax: leerPrecio(precioMax) }
+  const claveFiltros = JSON.stringify(filtros)
+  const { datos, error, cargando, recargar } = useCarga(
+    () => catalogoExperiencias(pagina, POR_PAGINA, filtros),
+    [pagina, claveFiltros],
+  )
+  // Sugerencias para el filtro de localidad; si fallan, el campo funciona igual sin ellas
+  const { datos: localidades } = useCarga(localidadesCatalogo, [])
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }, [pagina])
 
-  const irA = (n: number) => setParams(n === 1 ? {} : { pagina: String(n) })
+  const irA = (n: number) =>
+    setParams((previos) => {
+      const siguientes = new URLSearchParams(previos)
+      if (n === 1) siguientes.delete('pagina')
+      else siguientes.set('pagina', String(n))
+      return siguientes
+    })
+
+  /** Cualquier cambio de filtro vuelve a la primera página */
+  function cambiarFiltros(cambios: CambiosFiltros, reemplazar = false) {
+    setParams(
+      (previos) => {
+        const siguientes = new URLSearchParams(previos)
+        for (const [clave, valor] of Object.entries(cambios)) {
+          siguientes.delete(clave)
+          for (const v of [valor ?? []].flat()) if (v) siguientes.append(clave, v)
+        }
+        siguientes.delete('pagina')
+        return siguientes
+      },
+      { replace: reemplazar },
+    )
+  }
+
+  const limpiarFiltros = () => cambiarFiltros({ localidad: null, tipo: null, precio_min: null, precio_max: null })
 
   return (
     <section className="w-full">
@@ -26,10 +72,34 @@ export default function Catalogo() {
         <p className="mt-2 text-stone-600">Descubre actividades únicas junto a emprendedores locales.</p>
       </div>
 
+      <FiltrosCatalogo
+        localidad={localidad}
+        tipos={tipos}
+        precioMin={precioMin}
+        precioMax={precioMax}
+        localidades={localidades ?? []}
+        onCambiar={cambiarFiltros}
+      />
+
       {error && !cargando ? (
         <ErrorCarga error={error} titulo="No pudimos cargar el catálogo" onReintentar={recargar} />
       ) : cargando && !datos ? (
         <Esqueleto />
+      ) : datos && datos.total === 0 && hayFiltros ? (
+        <div className={`flex flex-col items-center rounded-2xl border border-dashed border-stone-300 bg-white p-10 text-center ${cargando ? 'opacity-60' : ''}`}>
+          <SearchX className="mb-3 size-10 text-stone-400" aria-hidden />
+          <p className="font-medium text-stone-700" aria-live="polite">
+            No encontramos experiencias con estos filtros
+          </p>
+          <p className="mt-1 text-sm text-stone-500">Prueba con otra localidad, un rango de precio más amplio u otros tipos.</p>
+          <button
+            type="button"
+            onClick={limpiarFiltros}
+            className="mt-4 rounded-lg bg-campo-600 px-4 py-2 text-sm font-medium text-white shadow transition hover:bg-campo-700"
+          >
+            Limpiar filtros
+          </button>
+        </div>
       ) : datos && datos.total === 0 ? (
         <div className="flex flex-col items-center rounded-2xl border border-dashed border-stone-300 bg-white p-10 text-center">
           <Compass className="mb-3 size-10 text-stone-400" aria-hidden />
@@ -40,15 +110,16 @@ export default function Catalogo() {
         // La página pedida no existe (p. ej. ?pagina=99)
         <div className="rounded-2xl bg-white p-10 text-center shadow-sm">
           <p className="font-medium text-stone-700">Esta página no tiene experiencias.</p>
-          <Link to="/" className="mt-3 inline-block font-medium text-campo-600 hover:underline">
+          <button type="button" onClick={() => irA(1)} className="mt-3 inline-block font-medium text-campo-600 hover:underline">
             Ir a la primera página
-          </Link>
+          </button>
         </div>
       ) : (
         datos && (
           <>
             <p className="mb-4 text-sm text-stone-500" aria-live="polite">
               {datos.total} {datos.total === 1 ? 'experiencia' : 'experiencias'}
+              {hayFiltros && (datos.total === 1 ? ' encontrada' : ' encontradas')}
             </p>
             <ul className={`grid gap-6 sm:grid-cols-2 lg:grid-cols-3 ${cargando ? 'opacity-60' : ''}`} aria-busy={cargando}>
               {datos.items.map((exp) => (

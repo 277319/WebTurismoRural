@@ -5,6 +5,7 @@ import RutaProtegida from './components/RutaProtegida'
 import { Ingresar, Registro } from './paginas/Acceso'
 import Catalogo from './paginas/Catalogo'
 import EditarEmprendimiento from './paginas/EditarEmprendimiento'
+import EditarExperiencia from './paginas/EditarExperiencia'
 import GaleriaExperiencia from './paginas/GaleriaExperiencia'
 import MiCuenta from './paginas/MiCuenta'
 import MisEmprendimientos from './paginas/MisEmprendimientos'
@@ -73,6 +74,14 @@ function App() {
           element={
             <RutaProtegida rol="anfitrion">
               <NuevaExperiencia />
+            </RutaProtegida>
+          }
+        />
+        <Route
+          path="experiencias/:id/editar"
+          element={
+            <RutaProtegida rol="anfitrion">
+              <EditarExperiencia />
             </RutaProtegida>
           }
         />

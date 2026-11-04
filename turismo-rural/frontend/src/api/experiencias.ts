@@ -59,10 +59,31 @@ async function json<T>(res: Response): Promise<T> {
   return res.json()
 }
 
-/** Catálogo público: solo experiencias activas, paginadas. */
-export async function catalogoExperiencias(pagina = 1, porPagina = 12): Promise<Pagina<Experiencia>> {
+export type FiltrosCatalogo = {
+  /** Parte del nombre; el backend no distingue mayúsculas ni tildes */
+  localidad?: string
+  tipos?: TipoExperiencia[]
+  precioMin?: number
+  precioMax?: number
+}
+
+/** Catálogo público: solo experiencias activas que cumplen los filtros, paginadas. */
+export async function catalogoExperiencias(
+  pagina = 1,
+  porPagina = 12,
+  filtros: FiltrosCatalogo = {},
+): Promise<Pagina<Experiencia>> {
   const params = new URLSearchParams({ pagina: String(pagina), por_pagina: String(porPagina) })
+  if (filtros.localidad?.trim()) params.set('localidad', filtros.localidad.trim())
+  filtros.tipos?.forEach((tipo) => params.append('tipo', tipo))
+  if (filtros.precioMin !== undefined) params.set('precio_min', String(filtros.precioMin))
+  if (filtros.precioMax !== undefined) params.set('precio_max', String(filtros.precioMax))
   return json(await apiFetch(`/experiencias?${params}`))
+}
+
+/** Localidades con experiencias activas, para sugerirlas en el filtro. */
+export async function localidadesCatalogo(): Promise<string[]> {
+  return json(await apiFetch('/experiencias/localidades'))
 }
 
 export async function misExperiencias(): Promise<Experiencia[]> {
@@ -71,6 +92,16 @@ export async function misExperiencias(): Promise<Experiencia[]> {
 
 export async function crearExperiencia(datos: DatosExperiencia): Promise<Experiencia> {
   return json(await apiFetch('/experiencias', { method: 'POST', body: JSON.stringify(datos) }))
+}
+
+/** Reemplaza todos los datos de la experiencia (las fotos se gestionan aparte). */
+export async function editarExperiencia(id: number, datos: DatosExperiencia): Promise<Experiencia> {
+  return json(await apiFetch(`/experiencias/${id}`, { method: 'PUT', body: JSON.stringify(datos) }))
+}
+
+/** Pausa o reanuda la experiencia; las pausadas no aparecen en el catálogo. */
+export async function cambiarEstadoExperiencia(id: number, estado: EstadoExperiencia): Promise<Experiencia> {
+  return json(await apiFetch(`/experiencias/${id}/estado`, { method: 'PATCH', body: JSON.stringify({ estado }) }))
 }
 
 /** Agrega una foto al final de la galería; el backend la redimensiona y comprime. */

@@ -36,6 +36,19 @@ class ExperienciaCrear(BaseModel):
         return self
 
 
+class ExperienciaEditar(ExperienciaCrear):
+    """PUT /experiencias/{id}: reemplaza todos los datos. Las fotos se gestionan en /fotos."""
+
+    # Obligatorio: si tuviera valor por defecto, un PUT sin estado reactivaría una experiencia pausada
+    estado: EstadoExperiencia
+
+
+class ExperienciaEstado(BaseModel):
+    """PATCH /experiencias/{id}/estado: pausar o reanudar."""
+
+    estado: EstadoExperiencia
+
+
 class EmprendimientoResumen(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
