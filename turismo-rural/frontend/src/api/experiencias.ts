@@ -1,4 +1,5 @@
 import { apiFetch, errorDesdeRespuesta } from './cliente'
+import type { Redes } from './emprendimientos'
 
 export type TipoExperiencia =
   | 'senderismo'
@@ -46,6 +47,17 @@ export type Experiencia = DatosExperiencia & {
   fecha_actualizacion: string
 }
 
+/** GET /experiencias/{id}: incluye los datos públicos del emprendimiento anfitrión */
+export type ExperienciaDetalle = Experiencia & {
+  emprendimiento: Experiencia['emprendimiento'] & {
+    localidad: string
+    descripcion: string | null
+    telefono_contacto: string
+    redes: Redes
+    usuario_id: number
+  }
+}
+
 export type Pagina<T> = {
   items: T[]
   total: number
@@ -86,6 +98,11 @@ export async function localidadesCatalogo(): Promise<string[]> {
   return json(await apiFetch('/experiencias/localidades'))
 }
 
+/** Pública si está activa; si está pausada, solo su dueño la puede ver. */
+export async function obtenerExperiencia(id: number): Promise<ExperienciaDetalle> {
+  return json(await apiFetch(`/experiencias/${id}`))
+}
+
 export async function misExperiencias(): Promise<Experiencia[]> {
   return json(await apiFetch('/experiencias/mias'))
 }
@@ -102,6 +119,12 @@ export async function editarExperiencia(id: number, datos: DatosExperiencia): Pr
 /** Pausa o reanuda la experiencia; las pausadas no aparecen en el catálogo. */
 export async function cambiarEstadoExperiencia(id: number, estado: EstadoExperiencia): Promise<Experiencia> {
   return json(await apiFetch(`/experiencias/${id}/estado`, { method: 'PATCH', body: JSON.stringify({ estado }) }))
+}
+
+/** Borra la experiencia y su galería. No se puede deshacer. */
+export async function eliminarExperiencia(id: number): Promise<void> {
+  const res = await apiFetch(`/experiencias/${id}`, { method: 'DELETE' })
+  if (!res.ok) throw await errorDesdeRespuesta(res)
 }
 
 /** Agrega una foto al final de la galería; el backend la redimensiona y comprime. */

@@ -12,7 +12,8 @@ export default function TarjetaExperiencia({ experiencia }: { experiencia: Exper
   const [fotoFallo, setFotoFallo] = useState(false)
 
   return (
-    <article className="flex w-full flex-col overflow-hidden rounded-2xl bg-white shadow-sm transition hover:shadow-md">
+    // El enlace del título cubre toda la tarjeta; el del emprendimiento queda por encima (relative z-10)
+    <article className="relative flex w-full flex-col overflow-hidden rounded-2xl bg-white shadow-sm transition focus-within:ring-2 focus-within:ring-campo-500 hover:shadow-md">
       <div className="relative aspect-[4/3] bg-gradient-to-br from-campo-100 to-campo-50">
         {foto && !fotoFallo ? (
           <img
@@ -34,14 +35,18 @@ export default function TarjetaExperiencia({ experiencia }: { experiencia: Exper
       </div>
 
       <div className="flex flex-1 flex-col p-4">
-        <h3 className="line-clamp-2 font-semibold text-stone-800">{experiencia.titulo}</h3>
+        <h3 className="line-clamp-2 font-semibold text-stone-800">
+          <Link to={`/experiencias/${experiencia.id}`} className="after:absolute after:inset-0 focus-visible:outline-none">
+            {experiencia.titulo}
+          </Link>
+        </h3>
         <p className="mt-1 flex items-center gap-1 text-sm text-stone-500">
           <MapPin className="size-4 shrink-0" aria-hidden />
           <span className="truncate">{experiencia.localidad}</span>
         </p>
         <Link
           to={`/emprendimientos/${experiencia.emprendimiento.id}`}
-          className="mt-1 truncate text-sm font-medium text-campo-600 hover:underline"
+          className="relative z-10 mt-1 truncate text-sm font-medium text-campo-600 hover:underline"
         >
           {experiencia.emprendimiento.nombre}
         </Link>

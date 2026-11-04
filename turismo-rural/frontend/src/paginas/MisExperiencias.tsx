@@ -1,15 +1,17 @@
-import { Images, LoaderCircle, MapPin, Pause, Pencil, Play, Plus, Sparkles, Users } from 'lucide-react'
+import { Eye, Images, LoaderCircle, MapPin, Pause, Pencil, Play, Plus, Sparkles, Trash2, Users } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router'
 import { urlArchivo } from '../api/cliente'
 import { mensajeDeError } from '../api/errores'
 import {
   cambiarEstadoExperiencia,
+  eliminarExperiencia,
   formatearPrecio,
   MAX_FOTOS_EXPERIENCIA,
   misExperiencias,
   type Experiencia,
 } from '../api/experiencias'
+import DialogoEliminar from '../components/DialogoEliminar'
 import ErrorCarga from '../components/ErrorCarga'
 import { useCarga } from '../hooks/useCarga'
 import { tipoExperiencia } from '../tiposExperiencia'
@@ -49,6 +51,15 @@ export default function MisExperiencias() {
         return siguiente
       })
     }
+  }
+
+  // Experiencia cuya eliminación se está confirmando
+  const [aEliminar, setAEliminar] = useState<Experiencia | null>(null)
+
+  async function eliminar(exp: Experiencia) {
+    await eliminarExperiencia(exp.id)
+    setDatos((lista) => (lista ?? []).filter((e) => e.id !== exp.id))
+    setAEliminar(null)
   }
 
   return (
@@ -168,12 +179,28 @@ export default function MisExperiencias() {
                       Editar
                     </Link>
                     <Link
+                      to={`/experiencias/${exp.id}`}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-stone-300 px-3 py-1.5 text-sm font-medium text-stone-700 transition hover:bg-stone-50"
+                    >
+                      <Eye className="size-4" aria-hidden />
+                      Ver
+                    </Link>
+                    <Link
                       to={`/experiencias/${exp.id}/galeria`}
                       className="inline-flex items-center gap-1.5 rounded-lg border border-stone-300 px-3 py-1.5 text-sm font-medium text-stone-700 transition hover:bg-stone-50"
                     >
                       <Images className="size-4" aria-hidden />
                       {exp.fotos.length === 0 ? 'Agregar galería de fotos' : `Galería (${exp.fotos.length}/${MAX_FOTOS_EXPERIENCIA})`}
                     </Link>
+                    <button
+                      type="button"
+                      onClick={() => setAEliminar(exp)}
+                      aria-label={`Eliminar «${exp.titulo}»`}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 px-3 py-1.5 text-sm font-medium text-red-600 transition hover:bg-red-50"
+                    >
+                      <Trash2 className="size-4" aria-hidden />
+                      Eliminar
+                    </button>
                   </div>
                   {erroresEstado[exp.id] && (
                     <p role="alert" className="mt-2 text-sm text-red-600">
@@ -186,6 +213,21 @@ export default function MisExperiencias() {
           })}
         </ul>
       )}
+
+      <DialogoEliminar
+        abierto={aEliminar !== null}
+        titulo="¿Eliminar esta experiencia?"
+        onEliminar={() => eliminar(aEliminar!)}
+        onCerrar={() => setAEliminar(null)}
+      >
+        <p>
+          Se borrará <strong className="font-semibold text-stone-800">«{aEliminar?.titulo}»</strong>
+          {aEliminar && aEliminar.fotos.length === 1 && ' junto con su foto'}
+          {aEliminar && aEliminar.fotos.length > 1 && ` junto con sus ${aEliminar.fotos.length} fotos`}. Esta acción no se
+          puede deshacer.
+        </p>
+        <p>Si solo quieres ocultarla un tiempo, usa «Pausar».</p>
+      </DialogoEliminar>
     </section>
   )
 }

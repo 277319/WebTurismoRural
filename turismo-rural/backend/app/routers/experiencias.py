@@ -9,13 +9,14 @@ from sqlalchemy.orm import Session, joinedload, selectinload
 from app.core.archivos import borrar_foto_experiencia, comprimir_imagen, guardar_foto_experiencia, leer_imagen
 from app.core.config import settings
 from app.core.db import get_db
-from app.core.deps import requerir_rol
+from app.core.deps import get_usuario_opcional, requerir_rol
 from app.models.emprendimiento import Emprendimiento
 from app.models.experiencia import EstadoExperiencia, Experiencia, TipoExperiencia
 from app.models.foto_experiencia import MAX_FOTOS_EXPERIENCIA, FotoExperiencia
 from app.models.usuario import RolUsuario, Usuario
 from app.schemas.experiencia import (
     ExperienciaCrear,
+    ExperienciaDetalle,
     ExperienciaEditar,
     ExperienciaEstado,
     ExperienciaPublica,
@@ -45,7 +46,7 @@ def obtener_propia(experiencia_id: int, usuario: Usuario, db: Session) -> Experi
     if experiencia is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Experiencia no encontrada")
     if experiencia.emprendimiento.usuario_id != usuario.id:
-        raise HTTPException(status.HTTP_403_FORBIDDEN, detail="Solo el dueño puede editar esta experiencia")
+        raise HTTPException(status.HTTP_403_FORBIDDEN, detail="Solo el dueño puede modificar esta experiencia")
     return experiencia
 
 
@@ -150,6 +151,25 @@ def mis_experiencias(
     return list(db.scalars(consulta))
 
 
+@router.get("/{experiencia_id}", response_model=ExperienciaDetalle)
+def obtener_experiencia(
+    experiencia_id: int,
+    usuario: Usuario | None = Depends(get_usuario_opcional),
+    db: Session = Depends(get_db),
+) -> Experiencia:
+    """Público: detalle de una experiencia activa. Las pausadas solo las ve su dueño (para revisarlas)."""
+    experiencia = db.get(
+        Experiencia,
+        experiencia_id,
+        options=[joinedload(Experiencia.emprendimiento), selectinload(Experiencia.fotos)],
+    )
+    es_dueno = experiencia is not None and usuario is not None and experiencia.emprendimiento.usuario_id == usuario.id
+    if experiencia is None or (experiencia.estado != EstadoExperiencia.activo and not es_dueno):
+        # Una pausada responde igual que una inexistente, para no revelar que existe
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Experiencia no encontrada")
+    return experiencia
+
+
 @router.put("/{experiencia_id}", response_model=ExperienciaPublica)
 def editar_experiencia(
     experiencia_id: int,
@@ -181,6 +201,22 @@ def cambiar_estado_experiencia(
     db.commit()
     db.refresh(experiencia)
     return experiencia
+
+
+@router.delete("/{experiencia_id}", status_code=status.HTTP_204_NO_CONTENT)
+def eliminar_experiencia(
+    experiencia_id: int,
+    usuario: Usuario = Depends(solo_anfitrion),
+    db: Session = Depends(get_db),
+) -> None:
+    """Borra la experiencia junto con su galería (filas y archivos). No se puede deshacer."""
+    experiencia = obtener_propia(experiencia_id, usuario, db)
+    urls = [f.url for f in experiencia.fotos]
+    db.delete(experiencia)
+    db.commit()
+    # Los archivos se borran después del commit: si este falla, las fotos siguen intactas
+    for url in urls:
+        borrar_foto_experiencia(url)
 
 
 @router.post(

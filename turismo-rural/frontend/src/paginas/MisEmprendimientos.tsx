@@ -1,8 +1,9 @@
-import { ExternalLink, Paintbrush, Pencil, Plus, Store } from 'lucide-react'
+import { ExternalLink, Paintbrush, Pencil, Plus, Store, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router'
 import { urlArchivo } from '../api/cliente'
-import { misEmprendimientos } from '../api/emprendimientos'
+import { eliminarEmprendimiento, misEmprendimientos, type Emprendimiento } from '../api/emprendimientos'
+import DialogoEliminar from '../components/DialogoEliminar'
 import EmprendimientoForm from '../components/EmprendimientoForm'
 import ErrorCarga from '../components/ErrorCarga'
 import { useCarga } from '../hooks/useCarga'
@@ -10,6 +11,14 @@ import { useCarga } from '../hooks/useCarga'
 export default function MisEmprendimientos() {
   const { datos: emprendimientos, error, cargando, recargar, setDatos } = useCarga(misEmprendimientos, [])
   const [creando, setCreando] = useState(false)
+  // Emprendimiento cuya eliminación se está confirmando
+  const [aEliminar, setAEliminar] = useState<Emprendimiento | null>(null)
+
+  async function eliminar(emp: Emprendimiento) {
+    await eliminarEmprendimiento(emp.id)
+    setDatos((lista) => (lista ?? []).filter((e) => e.id !== emp.id))
+    setAEliminar(null)
+  }
 
   return (
     <section className="w-full max-w-3xl">
@@ -80,12 +89,35 @@ export default function MisEmprendimientos() {
                       {texto}
                     </Link>
                   ))}
+                  <button
+                    type="button"
+                    onClick={() => setAEliminar(emp)}
+                    aria-label={`Eliminar «${emp.nombre}»`}
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 px-3 py-1.5 text-sm font-medium text-red-600 transition hover:bg-red-50"
+                  >
+                    <Trash2 className="size-4" aria-hidden />
+                    Eliminar
+                  </button>
                 </div>
               </li>
             )
           })}
         </ul>
       )}
+
+      <DialogoEliminar
+        abierto={aEliminar !== null}
+        titulo="¿Eliminar este emprendimiento?"
+        textoConfirmacion={aEliminar?.nombre}
+        onEliminar={() => eliminar(aEliminar!)}
+        onCerrar={() => setAEliminar(null)}
+      >
+        <p>
+          Se borrará <strong className="font-semibold text-stone-800">«{aEliminar?.nombre}»</strong> con su página pública
+          y <strong className="font-semibold text-stone-800">todas sus experiencias y fotos</strong>.
+        </p>
+        <p>Esta acción no se puede deshacer.</p>
+      </DialogoEliminar>
     </section>
   )
 }

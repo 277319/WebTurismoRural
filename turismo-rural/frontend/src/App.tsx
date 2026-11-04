@@ -4,6 +4,7 @@ import Layout from './components/Layout'
 import RutaProtegida from './components/RutaProtegida'
 import { Ingresar, Registro } from './paginas/Acceso'
 import Catalogo from './paginas/Catalogo'
+import DetalleExperiencia from './paginas/DetalleExperiencia'
 import EditarEmprendimiento from './paginas/EditarEmprendimiento'
 import EditarExperiencia from './paginas/EditarExperiencia'
 import GaleriaExperiencia from './paginas/GaleriaExperiencia'
@@ -77,6 +78,7 @@ function App() {
             </RutaProtegida>
           }
         />
+        <Route path="experiencias/:id" element={<DetalleExperiencia />} />
         <Route
           path="experiencias/:id/editar"
           element={

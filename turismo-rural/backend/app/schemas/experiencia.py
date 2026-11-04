@@ -96,6 +96,20 @@ class ExperienciaPublica(BaseModel):
     fecha_actualizacion: datetime
 
 
+class EmprendimientoAnfitrion(EmprendimientoResumen):
+    """Datos públicos del emprendimiento anfitrión, para el detalle de una experiencia."""
+
+    localidad: str
+    descripcion: str | None
+    telefono_contacto: str
+    redes: dict[str, str]
+    usuario_id: int
+
+
+class ExperienciaDetalle(ExperienciaPublica):
+    emprendimiento: EmprendimientoAnfitrion
+
+
 class PaginaExperiencias(BaseModel):
     items: list[ExperienciaPublica]
     total: int
