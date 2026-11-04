@@ -10,6 +10,7 @@ from app.core.db import Base
 
 if TYPE_CHECKING:
     from app.models.emprendimiento import Emprendimiento
+    from app.models.foto_experiencia import FotoExperiencia
 
 
 class TipoExperiencia(str, enum.Enum):
@@ -62,3 +63,8 @@ class Experiencia(Base):
     )
 
     emprendimiento: Mapped["Emprendimiento"] = relationship(back_populates="experiencias")
+    fotos: Mapped[list["FotoExperiencia"]] = relationship(
+        back_populates="experiencia",
+        cascade="all, delete-orphan",
+        order_by="FotoExperiencia.orden",
+    )

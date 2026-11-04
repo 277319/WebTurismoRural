@@ -4,11 +4,10 @@ from sqlalchemy.orm import Session
 
 from app.core.archivos import (
     borrar_foto_emprendimiento,
-    detectar_extension_imagen,
     guardar_foto_emprendimiento,
+    leer_imagen,
     url_foto_emprendimiento,
 )
-from app.core.config import settings
 from app.core.db import get_db
 from app.core.deps import requerir_rol
 from app.models.emprendimiento import Emprendimiento
@@ -33,24 +32,6 @@ def obtener_propio(emprendimiento_id: int, usuario: Usuario, db: Session) -> Emp
     if emprendimiento.usuario_id != usuario.id:
         raise HTTPException(status.HTTP_403_FORBIDDEN, detail="Solo el dueño puede editar este emprendimiento")
     return emprendimiento
-
-
-async def leer_imagen(archivo: UploadFile, campo: str) -> tuple[bytes, str]:
-    """Lee la imagen subida respetando el límite de tamaño; devuelve (contenido, extensión) o 413/415."""
-    limite = settings.MAX_FOTO_MB * 1024 * 1024
-    contenido = await archivo.read(limite + 1)
-    if len(contenido) > limite:
-        raise HTTPException(
-            status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-            detail={"campo": campo, "mensaje": f"La foto no puede superar los {settings.MAX_FOTO_MB} MB"},
-        )
-    extension = detectar_extension_imagen(contenido)
-    if extension is None:
-        raise HTTPException(
-            status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
-            detail={"campo": campo, "mensaje": "La foto debe ser JPG, PNG o WebP"},
-        )
-    return contenido, extension
 
 
 @router.post("", response_model=EmprendimientoPublico, status_code=status.HTTP_201_CREATED)

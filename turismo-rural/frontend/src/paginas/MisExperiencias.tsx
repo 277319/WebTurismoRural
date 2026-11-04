@@ -1,7 +1,8 @@
-import { MapPin, Plus, Sparkles, Users } from 'lucide-react'
+import { Images, MapPin, Plus, Sparkles, Users } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router'
-import { formatearPrecio, misExperiencias } from '../api/experiencias'
+import { urlArchivo } from '../api/cliente'
+import { formatearPrecio, MAX_FOTOS_EXPERIENCIA, misExperiencias } from '../api/experiencias'
 import ErrorCarga from '../components/ErrorCarga'
 import { useCarga } from '../hooks/useCarga'
 import { tipoExperiencia } from '../tiposExperiencia'
@@ -52,9 +53,18 @@ export default function MisExperiencias() {
                 key={exp.id}
                 className={`flex gap-4 rounded-xl bg-white p-4 shadow-sm ${esNueva ? 'ring-2 ring-campo-500' : ''}`}
               >
-                <span className="flex size-12 shrink-0 items-center justify-center rounded-lg bg-campo-100 text-campo-600" title={nombreTipo}>
-                  <Icono className="size-6" aria-hidden />
-                </span>
+                {exp.fotos.length > 0 ? (
+                  <img
+                    src={urlArchivo(exp.fotos[0].url) ?? undefined}
+                    alt=""
+                    loading="lazy"
+                    className="size-16 shrink-0 rounded-lg object-cover"
+                  />
+                ) : (
+                  <span className="flex size-16 shrink-0 items-center justify-center rounded-lg bg-campo-100 text-campo-600" title={nombreTipo}>
+                    <Icono className="size-7" aria-hidden />
+                  </span>
+                )}
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <h2 className="font-semibold text-stone-800">{exp.titulo}</h2>
@@ -89,6 +99,13 @@ export default function MisExperiencias() {
                       {exp.localidad}
                     </span>
                   </p>
+                  <Link
+                    to={`/experiencias/${exp.id}/galeria`}
+                    className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-stone-300 px-3 py-1.5 text-sm font-medium text-stone-700 transition hover:bg-stone-50"
+                  >
+                    <Images className="size-4" aria-hidden />
+                    {exp.fotos.length === 0 ? 'Agregar galería de fotos' : `Galería (${exp.fotos.length}/${MAX_FOTOS_EXPERIENCIA})`}
+                  </Link>
                 </div>
               </li>
             )
