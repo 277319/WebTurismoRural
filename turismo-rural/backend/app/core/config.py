@@ -10,6 +10,8 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
     CORS_ORIGINS: list[str] = ["http://localhost:5173"]
+    UPLOADS_DIR: str = "uploads"
+    MAX_FOTO_MB: int = 5
 
 
 settings = Settings()

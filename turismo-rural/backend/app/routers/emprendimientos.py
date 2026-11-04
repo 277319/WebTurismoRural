@@ -1,0 +1,108 @@
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+from sqlalchemy import select
+from sqlalchemy.orm import Session
+
+from app.core.archivos import borrar_foto_emprendimiento, detectar_extension_imagen, guardar_foto_emprendimiento
+from app.core.config import settings
+from app.core.db import get_db
+from app.core.deps import requerir_rol
+from app.models.emprendimiento import Emprendimiento
+from app.models.usuario import RolUsuario, Usuario
+from app.schemas.emprendimiento import EmprendimientoCrear, EmprendimientoEditar, EmprendimientoPublico
+
+router = APIRouter(prefix="/emprendimientos", tags=["emprendimientos"])
+
+solo_anfitrion = requerir_rol(RolUsuario.anfitrion)
+
+
+def obtener_propio(emprendimiento_id: int, usuario: Usuario, db: Session) -> Emprendimiento:
+    """Devuelve el emprendimiento si existe y pertenece al usuario; si no, 404 o 403."""
+    emprendimiento = db.get(Emprendimiento, emprendimiento_id)
+    if emprendimiento is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Emprendimiento no encontrado")
+    if emprendimiento.usuario_id != usuario.id:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, detail="Solo el dueño puede editar este emprendimiento")
+    return emprendimiento
+
+
+@router.post("", response_model=EmprendimientoPublico, status_code=status.HTTP_201_CREATED)
+def crear_emprendimiento(
+    datos: EmprendimientoCrear,
+    usuario: Usuario = Depends(solo_anfitrion),
+    db: Session = Depends(get_db),
+) -> Emprendimiento:
+    emprendimiento = Emprendimiento(**datos.model_dump(), usuario_id=usuario.id)
+    db.add(emprendimiento)
+    db.commit()
+    db.refresh(emprendimiento)
+    return emprendimiento
+
+
+@router.get("/mios", response_model=list[EmprendimientoPublico])
+def mis_emprendimientos(
+    usuario: Usuario = Depends(solo_anfitrion),
+    db: Session = Depends(get_db),
+) -> list[Emprendimiento]:
+    consulta = (
+        select(Emprendimiento)
+        .where(Emprendimiento.usuario_id == usuario.id)
+        .order_by(Emprendimiento.fecha_creacion.desc())
+    )
+    return list(db.scalars(consulta))
+
+
+@router.get("/{emprendimiento_id}", response_model=EmprendimientoPublico)
+def obtener_emprendimiento(emprendimiento_id: int, db: Session = Depends(get_db)) -> Emprendimiento:
+    """Público: cualquiera puede ver la ficha de un emprendimiento."""
+    emprendimiento = db.get(Emprendimiento, emprendimiento_id)
+    if emprendimiento is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Emprendimiento no encontrado")
+    return emprendimiento
+
+
+@router.put("/{emprendimiento_id}", response_model=EmprendimientoPublico)
+def editar_emprendimiento(
+    emprendimiento_id: int,
+    datos: EmprendimientoEditar,
+    usuario: Usuario = Depends(solo_anfitrion),
+    db: Session = Depends(get_db),
+) -> Emprendimiento:
+    emprendimiento = obtener_propio(emprendimiento_id, usuario, db)
+    valores = datos.model_dump(exclude={"redes"})
+    for campo, valor in valores.items():
+        setattr(emprendimiento, campo, valor)
+    emprendimiento.redes = datos.redes.model_dump(exclude_none=True)
+    db.commit()
+    db.refresh(emprendimiento)
+    return emprendimiento
+
+
+@router.put("/{emprendimiento_id}/foto", response_model=EmprendimientoPublico)
+async def subir_foto(
+    emprendimiento_id: int,
+    foto: UploadFile = File(description="JPG, PNG o WebP"),
+    usuario: Usuario = Depends(solo_anfitrion),
+    db: Session = Depends(get_db),
+) -> Emprendimiento:
+    emprendimiento = obtener_propio(emprendimiento_id, usuario, db)
+
+    limite = settings.MAX_FOTO_MB * 1024 * 1024
+    contenido = await foto.read(limite + 1)
+    if len(contenido) > limite:
+        raise HTTPException(
+            status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail={"campo": "foto", "mensaje": f"La foto no puede superar los {settings.MAX_FOTO_MB} MB"},
+        )
+    extension = detectar_extension_imagen(contenido)
+    if extension is None:
+        raise HTTPException(
+            status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+            detail={"campo": "foto", "mensaje": "La foto debe ser JPG, PNG o WebP"},
+        )
+
+    anterior = emprendimiento.foto_perfil
+    emprendimiento.foto_perfil = guardar_foto_emprendimiento(contenido, extension)
+    db.commit()
+    borrar_foto_emprendimiento(anterior)
+    db.refresh(emprendimiento)
+    return emprendimiento

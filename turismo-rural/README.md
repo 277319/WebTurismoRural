@@ -65,3 +65,18 @@ alembic upgrade head
 ```
 
 Importa cada modelo nuevo en `app/models/__init__.py` para que Alembic lo detecte.
+
+Open two terminals in VS Code. The split-terminal button is handy for this.
+
+Database: run docker compose up -d once. It stays running.
+Terminal 1 (backend):
+bash
+   cd backend
+   source .venv/bin/activate
+   uvicorn app.main:app --reload
+Terminal 2 (frontend):
+bash
+   cd frontend
+   npm run dev
+
+To check the setup end to end, call /health from a React component using import.meta.env.VITE_API_URL. If it returns {"status": "ok"}, the frontend, backend and CORS are all wired correctly, and you’re ready to start HU01.

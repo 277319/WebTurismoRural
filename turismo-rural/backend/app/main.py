@@ -1,17 +1,32 @@
+from pathlib import Path
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app.core.config import settings
-from app.routers import health
+from app.routers import auth, emprendimientos, experiencias, usuarios
 
-app = FastAPI(title=settings.PROJECT_NAME)
+app = FastAPI(title="Turismo Rural API")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
+    allow_origins=["http://localhost:5173"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-app.include_router(health.router, prefix="/api")
+@app.get("/health")
+def health():
+    return {"status": "ok"}
+
+
+app.include_router(auth.router)
+app.include_router(emprendimientos.router)
+app.include_router(usuarios.router)
+app.include_router(experiencias.router)
+
+# Fotos subidas por los usuarios (p. ej. /uploads/emprendimientos/abc123.jpg)
+Path(settings.UPLOADS_DIR).mkdir(parents=True, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=settings.UPLOADS_DIR), name="uploads")
