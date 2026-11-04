@@ -1,5 +1,5 @@
-import { ArrowLeft, CircleCheck, Eye, ImagePlus, Pencil } from 'lucide-react'
-import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { ArrowLeft, CircleCheck, Eye, ImagePlus, Paintbrush } from 'lucide-react'
+import { useState, type FormEvent } from 'react'
 import { Link, useParams } from 'react-router'
 import { ErrorApi, urlArchivo } from '../api/cliente'
 import {
@@ -14,9 +14,12 @@ import CampoArea from '../components/CampoArea'
 import CampoTexto from '../components/CampoTexto'
 import EmprendimientoCampos from '../components/EmprendimientoCampos'
 import ErrorCarga from '../components/ErrorCarga'
-import VistaPreviaEmprendimiento from '../components/VistaPreviaEmprendimiento'
+import FichaEmprendimiento from '../components/FichaEmprendimiento'
+import PestanasVistaPrevia, { type VistaMovil } from '../components/PestanasVistaPrevia'
+import { datosFicha } from '../fichaEmprendimiento'
 import { useCamposEmprendimiento } from '../hooks/useCamposEmprendimiento'
 import { useCarga } from '../hooks/useCarga'
+import { MAX_IMAGEN_MB, useImagenPendiente } from '../hooks/useImagenPendiente'
 import { REDES_INFO } from '../redes'
 import {
   CAMPOS_REDES,
@@ -30,8 +33,6 @@ import {
 
 const MAX_DESCRIPCION = 2000
 const MAX_HISTORIA = 5000
-const MAX_FOTO_MB = 5
-const TIPOS_FOTO = ['image/jpeg', 'image/png', 'image/webp']
 
 export default function EditarEmprendimiento() {
   const { id } = useParams()
@@ -96,28 +97,13 @@ function FormularioEdicion({
   const [tocadosRedes, setTocadosRedes] = useState<Partial<Record<CampoRed, boolean>>>({})
   const [erroresServidor, setErroresServidor] = useState<Record<string, string | undefined>>({})
 
-  // Foto elegida pero aún no subida, con su URL temporal para la vista previa
-  const [fotoNueva, setFotoNueva] = useState<{ archivo: File; url: string } | null>(null)
-  const urlTemporal = useRef<string | null>(null)
-  const [errorFoto, setErrorFoto] = useState<string | null>(null)
-  const inputFoto = useRef<HTMLInputElement>(null)
+  // Foto elegida pero aún no subida
+  const foto = useImagenPendiente()
 
-  const [vistaMovil, setVistaMovil] = useState<'editar' | 'previa'>('editar')
+  const [vistaMovil, setVistaMovil] = useState<VistaMovil>('editar')
   const [enviando, setEnviando] = useState(false)
   const [errorGeneral, setErrorGeneral] = useState<string | null>(null)
   const [guardado, setGuardado] = useState(false)
-
-  function cambiarFotoNueva(archivo: File | null) {
-    if (urlTemporal.current) URL.revokeObjectURL(urlTemporal.current)
-    const url = archivo ? URL.createObjectURL(archivo) : null
-    urlTemporal.current = url
-    setFotoNueva(archivo && url ? { archivo, url } : null)
-  }
-
-  // Libera la URL temporal al salir de la página
-  useEffect(() => () => {
-    if (urlTemporal.current) URL.revokeObjectURL(urlTemporal.current)
-  }, [])
 
   const erroresRedes = validarRedes(redes)
   const errorTexto = (campo: CampoTextoLargo, max: number) =>
@@ -130,20 +116,9 @@ function FormularioEdicion({
     setErrorGeneral(null)
   }
 
-  function elegirFoto(archivo: File | undefined) {
-    if (inputFoto.current) inputFoto.current.value = '' // permite volver a elegir el mismo archivo
-    if (!archivo) return
-    marcarCambio()
-    if (!TIPOS_FOTO.includes(archivo.type)) {
-      setErrorFoto('La foto debe ser JPG, PNG o WebP.')
-      return
-    }
-    if (archivo.size > MAX_FOTO_MB * 1024 * 1024) {
-      setErrorFoto(`La foto no puede superar los ${MAX_FOTO_MB} MB.`)
-      return
-    }
-    setErrorFoto(null)
-    cambiarFotoNueva(archivo)
+  function elegirFoto(input: HTMLInputElement) {
+    if (input.files?.length) marcarCambio()
+    foto.elegir(input)
   }
 
   function mostrarErrorServidor(err: unknown) {
@@ -185,12 +160,12 @@ function FormularioEdicion({
       return
     }
 
-    if (fotoNueva) {
+    if (foto.pendiente) {
       try {
-        actualizado = await subirFotoEmprendimiento(emprendimiento.id, fotoNueva.archivo)
-        cambiarFotoNueva(null)
+        actualizado = await subirFotoEmprendimiento(emprendimiento.id, foto.pendiente.archivo)
+        foto.descartar()
       } catch (err) {
-        setErrorFoto(`Los datos se guardaron, pero la foto no se pudo subir: ${mensajeDeError(err)}`)
+        foto.setError(`Los datos se guardaron, pero la foto no se pudo subir: ${mensajeDeError(err)}`)
       }
     }
 
@@ -200,29 +175,21 @@ function FormularioEdicion({
     setGuardado(true)
   }
 
-  const fotoMostrada = fotoNueva?.url ?? urlArchivo(emprendimiento.foto_url)
+  const fotoMostrada = foto.pendiente?.url ?? urlArchivo(emprendimiento.foto_url)
 
   return (
     <>
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-bold text-campo-700">Editar emprendimiento</h1>
-        {/* En pantallas pequeñas se alterna entre el formulario y la vista previa */}
-        <div className="grid grid-cols-2 rounded-lg bg-stone-200/60 p-1 text-sm font-medium lg:hidden" role="tablist">
-          {(['editar', 'previa'] as const).map((v) => (
-            <button
-              key={v}
-              type="button"
-              role="tab"
-              aria-selected={vistaMovil === v}
-              onClick={() => setVistaMovil(v)}
-              className={`inline-flex items-center justify-center gap-1.5 rounded-md px-3 py-1.5 transition ${
-                vistaMovil === v ? 'bg-white text-campo-700 shadow' : 'text-stone-600'
-              }`}
-            >
-              {v === 'editar' ? <Pencil className="size-4" aria-hidden /> : <Eye className="size-4" aria-hidden />}
-              {v === 'editar' ? 'Editar' : 'Vista previa'}
-            </button>
-          ))}
+        <div className="flex flex-wrap items-center gap-3">
+          <Link
+            to={`/emprendimientos/${emprendimiento.id}/personalizar`}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm font-medium text-stone-700 transition hover:bg-stone-50"
+          >
+            <Paintbrush className="size-4" aria-hidden />
+            Personalizar página
+          </Link>
+          <PestanasVistaPrevia vista={vistaMovil} onCambiar={setVistaMovil} />
         </div>
       </div>
 
@@ -244,11 +211,10 @@ function FormularioEdicion({
               </div>
               <div>
                 <input
-                  ref={inputFoto}
                   id="foto"
                   type="file"
-                  accept={TIPOS_FOTO.join(',')}
-                  onChange={(e) => elegirFoto(e.target.files?.[0])}
+                  accept={foto.tipos}
+                  onChange={(e) => elegirFoto(e.target)}
                   className="sr-only"
                   aria-describedby="foto-ayuda"
                 />
@@ -259,23 +225,23 @@ function FormularioEdicion({
                   <ImagePlus className="size-4" aria-hidden />
                   {fotoMostrada ? 'Cambiar foto' : 'Subir foto'}
                 </label>
-                {fotoNueva && (
+                {foto.pendiente && (
                   <button
                     type="button"
-                    onClick={() => cambiarFotoNueva(null)}
+                    onClick={foto.descartar}
                     className="ml-2 text-sm text-stone-500 hover:text-stone-700 hover:underline"
                   >
                     Descartar
                   </button>
                 )}
                 <p id="foto-ayuda" className="mt-1 text-xs text-stone-500">
-                  {fotoNueva ? `${fotoNueva.archivo.name} · se subirá al guardar` : `JPG, PNG o WebP, hasta ${MAX_FOTO_MB} MB`}
+                  {foto.pendiente ? `${foto.pendiente.archivo.name} · se subirá al guardar` : `JPG, PNG o WebP, hasta ${MAX_IMAGEN_MB} MB`}
                 </p>
               </div>
             </div>
-            {errorFoto && (
+            {foto.error && (
               <p role="alert" className="mt-2 text-sm text-red-600">
-                {errorFoto}
+                {foto.error}
               </p>
             )}
           </fieldset>
@@ -369,15 +335,19 @@ function FormularioEdicion({
             <Eye className="size-4" aria-hidden />
             Vista previa: así verán tu emprendimiento los visitantes
           </p>
-          <VistaPreviaEmprendimiento
-            nombre={basicos.valores.nombre}
-            localidad={basicos.valores.localidad}
-            direccion={basicos.valores.direccion}
-            telefono={basicos.valores.telefono_contacto.trim() ? limpiarTelefono(basicos.valores.telefono_contacto) : ''}
-            descripcion={textos.descripcion}
-            historia={textos.historia}
-            redes={normalizarRedes(redes)}
-            fotoUrl={fotoMostrada}
+          <FichaEmprendimiento
+            previa
+            datos={{
+              ...datosFicha(emprendimiento),
+              nombre: basicos.valores.nombre,
+              localidad: basicos.valores.localidad,
+              direccion: basicos.valores.direccion,
+              telefono: basicos.valores.telefono_contacto.trim() ? limpiarTelefono(basicos.valores.telefono_contacto) : '',
+              descripcion: textos.descripcion,
+              historia: textos.historia,
+              redes: normalizarRedes(redes),
+              fotoUrl: fotoMostrada,
+            }}
           />
         </aside>
       </div>

@@ -9,6 +9,8 @@ import MiCuenta from './paginas/MiCuenta'
 import MisEmprendimientos from './paginas/MisEmprendimientos'
 import MisExperiencias from './paginas/MisExperiencias'
 import NuevaExperiencia from './paginas/NuevaExperiencia'
+import PaginaEmprendimiento from './paginas/PaginaEmprendimiento'
+import PersonalizarEmprendimiento from './paginas/PersonalizarEmprendimiento'
 
 function App() {
   const { cargando } = useAuth()
@@ -37,6 +39,15 @@ function App() {
           element={
             <RutaProtegida rol="anfitrion">
               <MisEmprendimientos />
+            </RutaProtegida>
+          }
+        />
+        <Route path="emprendimientos/:id" element={<PaginaEmprendimiento />} />
+        <Route
+          path="emprendimientos/:id/personalizar"
+          element={
+            <RutaProtegida rol="anfitrion">
+              <PersonalizarEmprendimiento />
             </RutaProtegida>
           }
         />

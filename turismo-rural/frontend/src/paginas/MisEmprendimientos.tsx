@@ -1,4 +1,4 @@
-import { Pencil, Plus, Store } from 'lucide-react'
+import { ExternalLink, Paintbrush, Pencil, Plus, Store } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router'
 import { urlArchivo } from '../api/cliente'
@@ -63,13 +63,24 @@ export default function MisEmprendimientos() {
                   </p>
                   <p className="text-sm text-stone-500">Contacto: {emp.telefono_contacto}</p>
                 </div>
-                <Link
-                  to={`/emprendimientos/${emp.id}/editar`}
-                  className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-stone-300 px-3 py-1.5 text-sm font-medium text-stone-700 transition hover:bg-stone-50"
-                >
-                  <Pencil className="size-4" aria-hidden />
-                  Editar
-                </Link>
+                <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
+                  {(
+                    [
+                      [`/emprendimientos/${emp.id}/editar`, Pencil, 'Editar'],
+                      [`/emprendimientos/${emp.id}/personalizar`, Paintbrush, 'Personalizar'],
+                      [`/emprendimientos/${emp.id}`, ExternalLink, 'Ver página'],
+                    ] as const
+                  ).map(([ruta, Icono, texto]) => (
+                    <Link
+                      key={texto}
+                      to={ruta}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-stone-300 px-3 py-1.5 text-sm font-medium text-stone-700 transition hover:bg-stone-50"
+                    >
+                      <Icono className="size-4" aria-hidden />
+                      {texto}
+                    </Link>
+                  ))}
+                </div>
               </li>
             )
           })}

@@ -2,13 +2,23 @@ from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.core.archivos import borrar_foto_emprendimiento, detectar_extension_imagen, guardar_foto_emprendimiento
+from app.core.archivos import (
+    borrar_foto_emprendimiento,
+    detectar_extension_imagen,
+    guardar_foto_emprendimiento,
+    url_foto_emprendimiento,
+)
 from app.core.config import settings
 from app.core.db import get_db
 from app.core.deps import requerir_rol
 from app.models.emprendimiento import Emprendimiento
 from app.models.usuario import RolUsuario, Usuario
-from app.schemas.emprendimiento import EmprendimientoCrear, EmprendimientoEditar, EmprendimientoPublico
+from app.schemas.emprendimiento import (
+    EmprendimientoCrear,
+    EmprendimientoEditar,
+    EmprendimientoPersonalizar,
+    EmprendimientoPublico,
+)
 
 router = APIRouter(prefix="/emprendimientos", tags=["emprendimientos"])
 
@@ -23,6 +33,24 @@ def obtener_propio(emprendimiento_id: int, usuario: Usuario, db: Session) -> Emp
     if emprendimiento.usuario_id != usuario.id:
         raise HTTPException(status.HTTP_403_FORBIDDEN, detail="Solo el dueño puede editar este emprendimiento")
     return emprendimiento
+
+
+async def leer_imagen(archivo: UploadFile, campo: str) -> tuple[bytes, str]:
+    """Lee la imagen subida respetando el límite de tamaño; devuelve (contenido, extensión) o 413/415."""
+    limite = settings.MAX_FOTO_MB * 1024 * 1024
+    contenido = await archivo.read(limite + 1)
+    if len(contenido) > limite:
+        raise HTTPException(
+            status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail={"campo": campo, "mensaje": f"La foto no puede superar los {settings.MAX_FOTO_MB} MB"},
+        )
+    extension = detectar_extension_imagen(contenido)
+    if extension is None:
+        raise HTTPException(
+            status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+            detail={"campo": campo, "mensaje": "La foto debe ser JPG, PNG o WebP"},
+        )
+    return contenido, extension
 
 
 @router.post("", response_model=EmprendimientoPublico, status_code=status.HTTP_201_CREATED)
@@ -85,23 +113,61 @@ async def subir_foto(
     db: Session = Depends(get_db),
 ) -> Emprendimiento:
     emprendimiento = obtener_propio(emprendimiento_id, usuario, db)
-
-    limite = settings.MAX_FOTO_MB * 1024 * 1024
-    contenido = await foto.read(limite + 1)
-    if len(contenido) > limite:
-        raise HTTPException(
-            status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-            detail={"campo": "foto", "mensaje": f"La foto no puede superar los {settings.MAX_FOTO_MB} MB"},
-        )
-    extension = detectar_extension_imagen(contenido)
-    if extension is None:
-        raise HTTPException(
-            status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
-            detail={"campo": "foto", "mensaje": "La foto debe ser JPG, PNG o WebP"},
-        )
+    contenido, extension = await leer_imagen(foto, campo="foto")
 
     anterior = emprendimiento.foto_perfil
     emprendimiento.foto_perfil = guardar_foto_emprendimiento(contenido, extension)
+    db.commit()
+    borrar_foto_emprendimiento(anterior)
+    db.refresh(emprendimiento)
+    return emprendimiento
+
+
+@router.put("/{emprendimiento_id}/personalizacion", response_model=EmprendimientoPublico)
+def personalizar_emprendimiento(
+    emprendimiento_id: int,
+    datos: EmprendimientoPersonalizar,
+    usuario: Usuario = Depends(solo_anfitrion),
+    db: Session = Depends(get_db),
+) -> Emprendimiento:
+    """Colores, relato de la comunidad y bloques opcionales de la página pública."""
+    emprendimiento = obtener_propio(emprendimiento_id, usuario, db)
+    emprendimiento.color_primario = datos.color_primario
+    emprendimiento.color_secundario = datos.color_secundario
+    emprendimiento.relato_comunidad = datos.relato_comunidad
+    emprendimiento.bloques = datos.bloques.model_dump()
+    db.commit()
+    db.refresh(emprendimiento)
+    return emprendimiento
+
+
+@router.put("/{emprendimiento_id}/portada", response_model=EmprendimientoPublico)
+async def subir_portada(
+    emprendimiento_id: int,
+    portada: UploadFile = File(description="JPG, PNG o WebP"),
+    usuario: Usuario = Depends(solo_anfitrion),
+    db: Session = Depends(get_db),
+) -> Emprendimiento:
+    emprendimiento = obtener_propio(emprendimiento_id, usuario, db)
+    contenido, extension = await leer_imagen(portada, campo="portada")
+
+    anterior = emprendimiento.portada_url
+    emprendimiento.portada_url = url_foto_emprendimiento(guardar_foto_emprendimiento(contenido, extension))
+    db.commit()
+    borrar_foto_emprendimiento(anterior)
+    db.refresh(emprendimiento)
+    return emprendimiento
+
+
+@router.delete("/{emprendimiento_id}/portada", response_model=EmprendimientoPublico)
+def quitar_portada(
+    emprendimiento_id: int,
+    usuario: Usuario = Depends(solo_anfitrion),
+    db: Session = Depends(get_db),
+) -> Emprendimiento:
+    emprendimiento = obtener_propio(emprendimiento_id, usuario, db)
+    anterior = emprendimiento.portada_url
+    emprendimiento.portada_url = None
     db.commit()
     borrar_foto_emprendimiento(anterior)
     db.refresh(emprendimiento)

@@ -1,5 +1,6 @@
 import { MapPin } from 'lucide-react'
 import { useState } from 'react'
+import { Link } from 'react-router'
 import { urlArchivo } from '../api/cliente'
 import { formatearPrecio, type Experiencia } from '../api/experiencias'
 import { tipoExperiencia } from '../tiposExperiencia'
@@ -37,6 +38,12 @@ export default function TarjetaExperiencia({ experiencia }: { experiencia: Exper
           <MapPin className="size-4 shrink-0" aria-hidden />
           <span className="truncate">{experiencia.localidad}</span>
         </p>
+        <Link
+          to={`/emprendimientos/${experiencia.emprendimiento.id}`}
+          className="mt-1 truncate text-sm font-medium text-campo-600 hover:underline"
+        >
+          {experiencia.emprendimiento.nombre}
+        </Link>
         <p className="mt-auto pt-4 text-stone-800">
           <span className="text-lg font-bold text-campo-700">{formatearPrecio(experiencia.precio_por_persona)}</span>
           {experiencia.precio_por_persona > 0 && <span className="text-sm text-stone-500"> / persona</span>}

@@ -26,6 +26,7 @@ def guardar_foto_emprendimiento(contenido: bytes, extension: str) -> str:
 
 
 def borrar_foto_emprendimiento(nombre: str | None) -> None:
+    """Acepta el nombre del archivo o su ruta pública (/uploads/emprendimientos/...)."""
     if nombre:
         (DIR_FOTOS_EMPRENDIMIENTOS / Path(nombre).name).unlink(missing_ok=True)
 

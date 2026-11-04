@@ -11,6 +11,9 @@ if TYPE_CHECKING:
     from app.models.experiencia import Experiencia
     from app.models.usuario import Usuario
 
+# Paleta "Bosque", la misma que usa el resto del sitio
+COLOR_PRIMARIO_POR_DEFECTO = "#47702e"
+COLOR_SECUNDARIO_POR_DEFECTO = "#a0673a"
 
 class Emprendimiento(Base):
     __tablename__ = "emprendimientos"
@@ -26,6 +29,22 @@ class Emprendimiento(Base):
     redes: Mapped[dict[str, str]] = mapped_column(JSONB, default=dict, server_default=text("'{}'::jsonb"))
     # Nombre del archivo dentro de UPLOADS_DIR/emprendimientos/
     foto_perfil: Mapped[str | None] = mapped_column(String(255))
+
+    # --- Personalización de la página pública ---
+    # Colores hexadecimales '#rrggbb', aplicados como variables CSS en la página pública
+    color_primario: Mapped[str] = mapped_column(
+        String(7), default=COLOR_PRIMARIO_POR_DEFECTO, server_default=COLOR_PRIMARIO_POR_DEFECTO
+    )
+    color_secundario: Mapped[str] = mapped_column(
+        String(7), default=COLOR_SECUNDARIO_POR_DEFECTO, server_default=COLOR_SECUNDARIO_POR_DEFECTO
+    )
+    # Ruta pública de la foto de portada (p. ej. "/uploads/emprendimientos/abc123.jpg")
+    portada_url: Mapped[str | None] = mapped_column(String(255))
+    relato_comunidad: Mapped[str | None] = mapped_column(Text)
+    # Bloques opcionales que el anfitrión activa o desactiva:
+    # {"gastronomia": {"activo": true, "contenido": "..."}, "festividades": {...}, "normas_visita": {...}}
+    bloques: Mapped[dict[str, dict]] = mapped_column(JSONB, default=dict, server_default=text("'{}'::jsonb"))
+
     usuario_id: Mapped[int] = mapped_column(ForeignKey("usuarios.id", ondelete="CASCADE"), index=True)
     fecha_creacion: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()

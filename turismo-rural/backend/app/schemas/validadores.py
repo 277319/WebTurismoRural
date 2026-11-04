@@ -89,3 +89,19 @@ UsuarioFacebook = _red(_usuario_de_red("facebook.com", r"[A-Za-z0-9.\-]{1,80}", 
 UsuarioTiktok = _red(_usuario_de_red("tiktok.com", r"[A-Za-z0-9._]{2,24}", "TikTok"))
 TelefonoWhatsapp = _red(validar_telefono)
 SitioWeb = _red(validar_sitio_web)
+
+
+# --- Colores de la página pública ---
+
+COLOR_RE = re.compile(r"^#[0-9a-f]{6}$")
+
+
+def validar_color(valor: str) -> str:
+    """Solo '#rrggbb': el valor termina en una variable CSS, así que no se acepta nada más."""
+    valor = valor.strip().lower()
+    if not COLOR_RE.fullmatch(valor):
+        raise ValueError("El color debe tener el formato #rrggbb")
+    return valor
+
+
+ColorHex = Annotated[str, AfterValidator(validar_color)]
