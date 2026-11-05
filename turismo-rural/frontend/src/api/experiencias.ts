@@ -1,4 +1,5 @@
 import { apiFetch, errorDesdeRespuesta } from './cliente'
+import type { Redes } from './emprendimientos'
 
 export type TipoExperiencia =
   | 'senderismo'
@@ -10,6 +11,7 @@ export type TipoExperiencia =
   | 'acuatica'
   | 'avistamiento'
   | 'cultural'
+  | 'hospedaje'
 
 export type EstadoExperiencia = 'activo' | 'pausado'
 
@@ -46,6 +48,23 @@ export type Experiencia = DatosExperiencia & {
   fecha_actualizacion: string
 }
 
+/** GET /experiencias/mias: incluye lo que el anfitrión tiene que atender */
+export type ExperienciaPropia = Experiencia & {
+  /** Reservas de hoy en adelante que esperan su confirmación */
+  reservas_pendientes: number
+}
+
+/** GET /experiencias/{id}: incluye los datos públicos del emprendimiento anfitrión */
+export type ExperienciaDetalle = Experiencia & {
+  emprendimiento: Experiencia['emprendimiento'] & {
+    localidad: string
+    descripcion: string | null
+    telefono_contacto: string
+    redes: Redes
+    usuario_id: number
+  }
+}
+
 export type Pagina<T> = {
   items: T[]
   total: number
@@ -59,18 +78,87 @@ async function json<T>(res: Response): Promise<T> {
   return res.json()
 }
 
-/** Catálogo público: solo experiencias activas, paginadas. */
-export async function catalogoExperiencias(pagina = 1, porPagina = 12): Promise<Pagina<Experiencia>> {
+export type FiltrosCatalogo = {
+  /** Parte del nombre; el backend no distingue mayúsculas ni tildes */
+  localidad?: string
+  tipos?: TipoExperiencia[]
+  precioMin?: number
+  precioMax?: number
+}
+
+/** Catálogo público: solo experiencias activas que cumplen los filtros, paginadas. */
+export async function catalogoExperiencias(
+  pagina = 1,
+  porPagina = 12,
+  filtros: FiltrosCatalogo = {},
+): Promise<Pagina<Experiencia>> {
   const params = new URLSearchParams({ pagina: String(pagina), por_pagina: String(porPagina) })
+  if (filtros.localidad?.trim()) params.set('localidad', filtros.localidad.trim())
+  filtros.tipos?.forEach((tipo) => params.append('tipo', tipo))
+  if (filtros.precioMin !== undefined) params.set('precio_min', String(filtros.precioMin))
+  if (filtros.precioMax !== undefined) params.set('precio_max', String(filtros.precioMax))
   return json(await apiFetch(`/experiencias?${params}`))
 }
 
-export async function misExperiencias(): Promise<Experiencia[]> {
+/** Localidades con experiencias activas, para sugerirlas en el filtro. */
+export async function localidadesCatalogo(): Promise<string[]> {
+  return json(await apiFetch('/experiencias/localidades'))
+}
+
+/** Pública si está activa; si está pausada, solo su dueño la puede ver. */
+export async function obtenerExperiencia(id: number): Promise<ExperienciaDetalle> {
+  return json(await apiFetch(`/experiencias/${id}`))
+}
+
+export async function misExperiencias(): Promise<ExperienciaPropia[]> {
   return json(await apiFetch('/experiencias/mias'))
 }
 
 export async function crearExperiencia(datos: DatosExperiencia): Promise<Experiencia> {
   return json(await apiFetch('/experiencias', { method: 'POST', body: JSON.stringify(datos) }))
+}
+
+/** Reemplaza todos los datos de la experiencia (las fotos se gestionan aparte). */
+export async function editarExperiencia(id: number, datos: DatosExperiencia): Promise<Experiencia> {
+  return json(await apiFetch(`/experiencias/${id}`, { method: 'PUT', body: JSON.stringify(datos) }))
+}
+
+/** Pausa o reanuda la experiencia; las pausadas no aparecen en el catálogo. */
+export async function cambiarEstadoExperiencia(id: number, estado: EstadoExperiencia): Promise<Experiencia> {
+  return json(await apiFetch(`/experiencias/${id}/estado`, { method: 'PATCH', body: JSON.stringify({ estado }) }))
+}
+
+/** Borra la experiencia y su galería. No se puede deshacer. */
+export async function eliminarExperiencia(id: number): Promise<void> {
+  const res = await apiFetch(`/experiencias/${id}`, { method: 'DELETE' })
+  if (!res.ok) throw await errorDesdeRespuesta(res)
+}
+
+/** Mismo límite que el backend (MAX_DIAS_DISPONIBILIDAD): días hacia adelante que se pueden abrir */
+export const MAX_DIAS_DISPONIBILIDAD = 365
+
+export type DiaDisponible = {
+  /** 'YYYY-MM-DD' */
+  fecha: string
+  /** Cupos libres: ya descontadas las personas con reserva activa. 0 = completo */
+  cupos: number
+  /** Personas con reserva pendiente o confirmada ese día */
+  reservados: number
+}
+
+/** Días disponibles desde hoy (pública, con las mismas reglas de visibilidad que el detalle). */
+export async function obtenerDisponibilidad(experienciaId: number): Promise<DiaDisponible[]> {
+  return json(await apiFetch(`/experiencias/${experienciaId}/disponibilidad`))
+}
+
+/** Reemplaza los días disponibles desde hoy: los que no se envían quedan cerrados. */
+export async function guardarDisponibilidad(
+  experienciaId: number,
+  dias: Pick<DiaDisponible, 'fecha' | 'cupos'>[],
+): Promise<DiaDisponible[]> {
+  return json(
+    await apiFetch(`/experiencias/${experienciaId}/disponibilidad`, { method: 'PUT', body: JSON.stringify({ dias }) }),
+  )
 }
 
 /** Agrega una foto al final de la galería; el backend la redimensiona y comprime. */

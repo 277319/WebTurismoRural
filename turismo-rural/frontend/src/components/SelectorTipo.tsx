@@ -11,19 +11,19 @@ type Props = {
 export default function SelectorTipo({ valor, error, onChange }: Props) {
   return (
     <fieldset aria-describedby={error ? 'tipo-error' : undefined}>
-      <legend className="mb-2 text-sm font-medium text-stone-700">Tipo de experiencia</legend>
+      <legend className="mb-2 text-base font-semibold text-stone-800">Tipo de experiencia</legend>
       <div className="grid grid-cols-3 gap-2 sm:gap-3">
         {TIPOS_EXPERIENCIA.map(({ id, nombre, Icono }) => {
           const activo = valor === id
           return (
             <label
               key={id}
-              className={`flex cursor-pointer flex-col items-center gap-1.5 rounded-xl border-2 px-2 py-3 text-center text-xs font-medium transition has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-campo-500 sm:text-sm ${
+              className={`flex cursor-pointer flex-col items-center gap-1.5 rounded-xl border-2 px-2 py-3 text-center text-sm font-semibold transition has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-campo-500 sm:text-base ${
                 activo
                   ? 'border-campo-500 bg-campo-50 text-campo-700'
                   : error
-                    ? 'border-red-200 text-stone-600 hover:border-campo-500'
-                    : 'border-stone-200 text-stone-600 hover:border-campo-500'
+                    ? 'border-red-600 text-stone-600 hover:border-campo-500'
+                    : 'border-stone-400 text-stone-600 hover:border-campo-500'
               }`}
             >
               <input
@@ -34,7 +34,7 @@ export default function SelectorTipo({ valor, error, onChange }: Props) {
                 onChange={() => onChange(id)}
                 className="sr-only"
               />
-              <Icono className={`size-7 ${activo ? 'text-campo-600' : 'text-stone-500'}`} strokeWidth={1.75} aria-hidden />
+              <Icono className={`size-7 ${activo ? 'text-campo-600' : 'text-stone-600'}`} strokeWidth={1.75} aria-hidden />
               {nombre}
             </label>
           )

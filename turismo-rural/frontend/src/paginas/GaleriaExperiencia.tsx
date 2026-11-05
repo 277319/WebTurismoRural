@@ -36,7 +36,7 @@ export default function GaleriaExperiencia() {
       {error && !cargando ? (
         <ErrorCarga error={error} titulo="No pudimos cargar la galería" onReintentar={recargar} />
       ) : !datos ? (
-        <p className="text-stone-500">Cargando…</p>
+        <p className="text-stone-600">Cargando…</p>
       ) : (
         <EditorGaleria key={datos.id} experiencia={datos} />
       )}
@@ -205,16 +205,16 @@ function EditorGaleria({ experiencia }: { experiencia: Experiencia }) {
     <div {...zonaArchivos}>
       <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
         <div className="min-w-0">
-          <h1 className="text-2xl font-bold text-campo-700">Galería de fotos</h1>
+          <h1 className="text-3xl font-bold text-campo-700">Galería de fotos</h1>
           <p className="mt-0.5 truncate text-stone-600">{experiencia.titulo}</p>
         </div>
-        <p role="status" className="text-sm font-medium text-stone-500">
+        <p role="status" className="text-sm font-medium text-stone-600">
           {fotos.length + enCurso} de {MAX_FOTOS_EXPERIENCIA} fotos
         </p>
       </div>
 
       <div className="rounded-2xl bg-white p-4 shadow-lg sm:p-6">
-        <p className="mb-4 text-sm text-stone-500">
+        <p className="mb-4 text-sm text-stone-600">
           La primera foto es la principal: es la que se ve en el catálogo. Arrastra las fotos o usa las flechas para cambiar el orden.
         </p>
 
@@ -231,7 +231,7 @@ function EditorGaleria({ experiencia }: { experiencia: Experiencia }) {
           </div>
         )}
 
-        <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+        <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {fotos.map((foto, i) => (
             <li
               key={foto.id}
@@ -254,18 +254,26 @@ function EditorGaleria({ experiencia }: { experiencia: Experiencia }) {
                 terminarArrastre()
               }}
               onDragEnd={terminarArrastre}
-              className={`group relative aspect-[4/3] overflow-hidden rounded-xl bg-stone-100 shadow-sm transition ${
+              className={`group relative overflow-hidden rounded-xl bg-white shadow-sm transition ${
                 arrastrada === i ? 'opacity-40' : ''
               } ${destino === i && arrastrada !== i ? 'ring-2 ring-campo-500 ring-offset-2' : ''} ${
                 bloqueado ? '' : 'cursor-grab active:cursor-grabbing'
               }`}
             >
-              <img src={urlArchivo(foto.url) ?? undefined} alt={`Foto ${i + 1} de la experiencia`} draggable={false} className="size-full object-cover" />
+              <div className="relative aspect-[4/3] bg-stone-100">
+              <img
+                src={urlArchivo(foto.url) ?? undefined}
+                alt={`Foto ${i + 1} de la experiencia`}
+                draggable={false}
+                loading="lazy"
+                decoding="async"
+                className="size-full object-cover"
+              />
 
-              <span className="absolute top-2 left-2 inline-flex items-center gap-1 rounded-full bg-white/90 px-2 py-0.5 text-xs font-semibold text-stone-700 shadow-sm">
+              <span className="absolute top-2 left-2 inline-flex items-center gap-1 rounded-full bg-white/90 px-2 py-0.5 text-sm font-semibold text-stone-700 shadow-sm">
                 {i === 0 ? (
                   <>
-                    <Star className="size-3 fill-amber-400 text-amber-500" aria-hidden />
+                    <Star className="size-4 fill-amber-400 text-amber-500" aria-hidden />
                     Principal
                   </>
                 ) : (
@@ -276,33 +284,41 @@ function EditorGaleria({ experiencia }: { experiencia: Experiencia }) {
                 <GripVertical className="absolute top-2 right-2 size-5 text-white drop-shadow" aria-hidden />
               )}
 
-              <div className="absolute inset-x-0 bottom-0 flex items-center justify-between bg-gradient-to-t from-black/60 to-transparent p-2 pt-6">
-                <div className="flex gap-1">
-                  <BotonFoto etiqueta={`Mover la foto ${i + 1} hacia atrás`} disabled={bloqueado || i === 0} onClick={() => mover(i, i - 1)}>
-                    <ChevronLeft className="size-4" aria-hidden />
-                  </BotonFoto>
-                  <BotonFoto
-                    etiqueta={`Mover la foto ${i + 1} hacia adelante`}
-                    disabled={bloqueado || i === fotos.length - 1}
-                    onClick={() => mover(i, i + 1)}
-                  >
-                    <ChevronRight className="size-4" aria-hidden />
-                  </BotonFoto>
-                </div>
+              </div>
+
+              {/* Botones con texto debajo de la foto: se entienden sin adivinar qué hace cada ícono */}
+              <div className="flex flex-wrap gap-2 p-2">
+                <BotonFoto
+                  etiqueta={`Mover la foto ${i + 1} hacia atrás`}
+                  disabled={bloqueado || i === 0}
+                  onClick={() => mover(i, i - 1)}
+                >
+                  <ChevronLeft className="size-5" aria-hidden />
+                  Antes
+                </BotonFoto>
+                <BotonFoto
+                  etiqueta={`Mover la foto ${i + 1} hacia adelante`}
+                  disabled={bloqueado || i === fotos.length - 1}
+                  onClick={() => mover(i, i + 1)}
+                >
+                  Después
+                  <ChevronRight className="size-5" aria-hidden />
+                </BotonFoto>
                 <BotonFoto etiqueta={`Eliminar la foto ${i + 1}`} disabled={bloqueado} peligro onClick={() => setConfirmarId(foto.id)}>
-                  <Trash2 className="size-4" aria-hidden />
+                  <Trash2 className="size-5" aria-hidden />
+                  Eliminar
                 </BotonFoto>
               </div>
 
               {confirmarId === foto.id && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/70 p-3 text-center">
-                  <p className="text-sm font-medium text-white">¿Eliminar esta foto?</p>
+                  <p className="text-lg font-semibold text-white">¿Eliminar esta foto?</p>
                   <div className="flex gap-2">
                     <button
                       type="button"
                       onClick={() => eliminar(foto)}
                       disabled={ocupado}
-                      className="rounded-lg bg-red-600 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-red-700 disabled:opacity-60"
+                      className="rounded-lg bg-red-600 px-4 py-2.5 text-base font-semibold text-white transition hover:bg-red-700 disabled:opacity-60"
                     >
                       {ocupado ? 'Eliminando…' : 'Eliminar'}
                     </button>
@@ -310,9 +326,9 @@ function EditorGaleria({ experiencia }: { experiencia: Experiencia }) {
                       type="button"
                       onClick={() => setConfirmarId(null)}
                       disabled={ocupado}
-                      className="rounded-lg bg-white px-3 py-1.5 text-xs font-medium text-stone-700 transition hover:bg-stone-100"
+                      className="rounded-lg bg-white px-4 py-2.5 text-base font-semibold text-stone-800 transition hover:bg-stone-100"
                     >
-                      Cancelar
+                      No, dejarla
                     </button>
                   </div>
                 </div>
@@ -326,20 +342,20 @@ function EditorGaleria({ experiencia }: { experiencia: Experiencia }) {
               {subida.error ? (
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-red-50/95 p-3 text-center">
                   <TriangleAlert className="size-5 text-red-600" aria-hidden />
-                  <p className="line-clamp-3 text-xs text-red-700">{subida.error}</p>
+                  <p className="line-clamp-3 text-sm text-red-700">{subida.error}</p>
                   <div className="flex gap-2">
                     <button
                       type="button"
                       onClick={() => reintentar(subida)}
-                      className="inline-flex items-center gap-1 rounded-lg bg-white px-2 py-1 text-xs font-medium text-stone-700 shadow-sm hover:bg-stone-50"
+                      className="inline-flex items-center gap-1 rounded-lg bg-white px-2 py-1 text-sm font-semibold text-stone-700 shadow-sm hover:bg-stone-50"
                     >
-                      <RotateCw className="size-3" aria-hidden />
+                      <RotateCw className="size-4" aria-hidden />
                       Reintentar
                     </button>
                     <button
                       type="button"
                       onClick={() => quitarSubida(subida)}
-                      className="rounded-lg px-2 py-1 text-xs font-medium text-red-700 hover:bg-red-100"
+                      className="rounded-lg px-2 py-1 text-sm font-semibold text-red-700 hover:bg-red-100"
                     >
                       Quitar
                     </button>
@@ -367,12 +383,12 @@ function EditorGaleria({ experiencia }: { experiencia: Experiencia }) {
                 className={`flex aspect-[4/3] cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed p-3 text-center text-sm transition ${
                   soltandoArchivos
                     ? 'border-campo-500 bg-campo-50 text-campo-700'
-                    : 'border-stone-300 text-stone-500 hover:border-campo-500 hover:bg-campo-50/50 hover:text-campo-700'
+                    : 'border-stone-500 text-stone-600 hover:border-campo-500 hover:bg-campo-50/50 hover:text-campo-700'
                 }`}
               >
                 <ImagePlus className="size-7" aria-hidden />
                 <span className="font-medium">{soltandoArchivos ? 'Suelta las fotos aquí' : 'Agregar fotos'}</span>
-                <span className="text-xs">Examina tu equipo o arrastra las imágenes</span>
+                <span className="text-sm">Examina tu equipo o arrastra las imágenes</span>
               </label>
             </li>
           )}
@@ -390,7 +406,7 @@ function EditorGaleria({ experiencia }: { experiencia: Experiencia }) {
           className="sr-only"
           aria-describedby="fotos-ayuda"
         />
-        <p id="fotos-ayuda" className="mt-4 text-xs text-stone-500">
+        <p id="fotos-ayuda" className="mt-4 text-sm text-stone-600">
           {libres > 0
             ? `JPG, PNG o WebP, hasta ${MAX_FOTO_EXPERIENCIA_MB} MB cada una. Puedes agregar ${libres} ${libres === 1 ? 'foto más' : 'fotos más'}; se optimizan automáticamente al subirlas.`
             : `Llegaste al máximo de ${MAX_FOTOS_EXPERIENCIA} fotos. Elimina alguna para agregar otra.`}
@@ -419,9 +435,8 @@ function BotonFoto({
       onClick={onClick}
       disabled={disabled}
       aria-label={etiqueta}
-      title={etiqueta}
-      className={`flex size-8 items-center justify-center rounded-full bg-white/90 shadow-sm transition disabled:cursor-not-allowed disabled:opacity-40 ${
-        peligro ? 'text-red-600 hover:bg-red-50' : 'text-stone-700 hover:bg-white'
+      className={`inline-flex min-h-11 flex-1 items-center justify-center gap-1 rounded-lg border-2 px-2 text-base font-semibold transition disabled:cursor-not-allowed disabled:opacity-40 ${
+        peligro ? 'border-red-600 text-red-700 hover:bg-red-50' : 'border-stone-500 text-stone-800 hover:bg-stone-100'
       }`}
     >
       {children}

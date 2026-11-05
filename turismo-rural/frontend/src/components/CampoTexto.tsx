@@ -19,12 +19,12 @@ export default function CampoTexto({ id, label, error, ayuda, prefijo, onChange,
 
   return (
     <div>
-      <label htmlFor={id} className="mb-1 block text-sm font-medium text-stone-700">
+      <label htmlFor={id} className="mb-1.5 block text-base font-semibold text-stone-800">
         {label}
       </label>
       <div className="relative">
         {prefijo && (
-          <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-stone-400">{prefijo}</span>
+          <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-stone-500">{prefijo}</span>
         )}
         <input
           id={id}
@@ -33,20 +33,20 @@ export default function CampoTexto({ id, label, error, ayuda, prefijo, onChange,
           onChange={(e) => onChange(e.target.value)}
           aria-invalid={!!error}
           aria-describedby={descripcion}
-          className={`w-full rounded-lg border py-2 pr-3 outline-none transition focus:ring-2 ${prefijo ? 'pl-8' : 'pl-3'} ${
+          className={`w-full rounded-lg border-2 bg-white py-3 pr-3 text-base outline-none transition focus:ring-2 ${prefijo ? 'pl-8' : 'pl-3'} ${
             error
-              ? 'border-red-400 focus:border-red-500 focus:ring-red-200'
-              : 'border-stone-300 focus:border-campo-500 focus:ring-campo-100'
+              ? 'border-red-600 focus:border-red-600 focus:ring-red-200'
+              : 'border-stone-500 focus:border-campo-500 focus:ring-campo-100'
           }`}
         />
       </div>
       {error ? (
-        <p id={`${id}-error`} className="mt-1 text-sm text-red-600">
+        <p id={`${id}-error`} className="mt-1 text-base font-medium text-red-700">
           {error}
         </p>
       ) : (
         ayuda && (
-          <p id={`${id}-ayuda`} className="mt-1 text-xs text-stone-500">
+          <p id={`${id}-ayuda`} className="mt-1 text-sm text-stone-600">
             {ayuda}
           </p>
         )

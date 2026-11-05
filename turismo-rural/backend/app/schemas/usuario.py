@@ -2,20 +2,53 @@ import re
 from datetime import datetime
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, ValidationInfo, field_validator, model_validator
 
 from app.models.usuario import RolUsuario
 from app.schemas.emprendimiento import EmprendimientoCrear
 from app.schemas.validadores import Telefono
 
 
+def normalizar_nombre(v: object) -> object:
+    """Quita espacios sobrantes; un nombre vacío cuenta como no indicado."""
+    if isinstance(v, str):
+        return " ".join(v.split()) or None
+    return v
+
+
+def exigir_nombre(nombre: str | None) -> str:
+    if not nombre:
+        raise ValueError("Ingresa tu nombre")
+    if not any(c.isalpha() for c in nombre):
+        raise ValueError("El nombre debe contener letras")
+    return nombre
+
+
 class UsuarioRegistro(BaseModel):
+    # Valida también los valores por defecto: así se exige el nombre aunque no se envíe
+    model_config = ConfigDict(validate_default=True)
+
     correo: EmailStr | None = None
     telefono: Telefono | None = None
     contrasena: str = Field(min_length=8, max_length=72)
     # Solo se permite registrarse como visitante o anfitrión (nunca como admin)
     rol: Literal["visitante", "anfitrion"] = "visitante"
+    # Obligatorio para los visitantes: el anfitrión tiene que saber quién reserva.
+    # Va después de `rol` para poder leerlo al validar
+    nombre: str | None = Field(default=None, max_length=100)
     emprendimiento: EmprendimientoCrear | None = None
+
+    @field_validator("nombre", mode="before")
+    @classmethod
+    def limpiar_nombre(cls, v: object) -> object:
+        return normalizar_nombre(v)
+
+    @field_validator("nombre")
+    @classmethod
+    def nombre_de_visitante(cls, v: str | None, info: ValidationInfo) -> str | None:
+        if info.data.get("rol") == RolUsuario.visitante:
+            return exigir_nombre(v)
+        return v
 
     @field_validator("correo")
     @classmethod

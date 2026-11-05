@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% import "_componentes.html" as c with context %}
+
+{# Una plantilla para los dos destinatarios: el visitante recibe el acuse y el anfitrión, el aviso para responder #}
+
+{% block resumen -%}
+  {% if para_anfitrion -%}
+    {{ visitante or "Un visitante" }} quiere reservar para el {{ fecha }}. Confírmala o recházala.
+  {%- else -%}
+    {{ emprendimiento }} revisará tu solicitud para el {{ fecha }} y te avisaremos su respuesta.
+  {%- endif %}
+{%- endblock %}
+
+{% block contenido %}
+  {{ c.estado("Pendiente de confirmación", "#92400e", "#fef3c7") }}
+
+  {% if para_anfitrion %}
+    {{ c.titulo("Tienes una nueva solicitud de reserva") }}
+    {{ c.saludo(anfitrion) }}
+    <p style="margin: 0 0 12px">
+      <strong>{{ visitante or "Un visitante" }}</strong> quiere reservar <strong>{{ experiencia }}</strong>.
+      Sus cupos ya quedaron apartados mientras decides.
+    </p>
+    {{ c.detalle() }}
+    {% if contacto_visitante %}
+      <p style="margin: 0; font-size: 14px; color: #57534e">
+        Contacto del visitante: <strong>{{ contacto_visitante }}</strong>
+      </p>
+    {% endif %}
+    {{ c.boton(url_reservas_experiencia, "Confirmar o rechazar") }}
+  {% else %}
+    {{ c.titulo("Recibimos tu solicitud") }}
+    {{ c.saludo(visitante) }}
+    <p style="margin: 0 0 12px">
+      Tu solicitud para <strong>{{ experiencia }}</strong> ya está en manos de {{ emprendimiento }}. Tus cupos
+      quedan apartados y te escribiremos apenas confirme o rechace la reserva.
+    </p>
+    {{ c.detalle() }}
+    {{ c.contacto_anfitrion() }}
+    {{ c.boton(url_mis_reservas, "Ver mis reservas") }}
+  {% endif %}
+{% endblock %}

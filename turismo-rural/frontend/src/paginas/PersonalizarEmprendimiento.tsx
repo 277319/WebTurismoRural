@@ -43,7 +43,7 @@ export default function PersonalizarEmprendimiento() {
       {error && !cargando ? (
         <ErrorCarga error={error} titulo="No pudimos cargar el emprendimiento" onReintentar={recargar} />
       ) : !datos ? (
-        <p className="text-stone-500">Cargando…</p>
+        <p className="text-stone-600">Cargando…</p>
       ) : datos.usuario_id !== usuario?.id ? (
         <ErrorCarga
           error={new Error('Solo el dueño puede personalizar este emprendimiento.')}
@@ -198,11 +198,11 @@ function FormularioPersonalizacion({
   return (
     <>
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold text-campo-700">Personalizar página</h1>
+        <h1 className="text-3xl font-bold text-campo-700">Personalizar página</h1>
         <div className="flex flex-wrap items-center gap-3">
           <Link
             to={`/emprendimientos/${emprendimiento.id}`}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm font-medium text-stone-700 transition hover:bg-stone-50"
+            className="inline-flex items-center gap-1.5 rounded-lg border-2 border-stone-500 bg-white px-4 py-2.5 text-base font-semibold text-stone-700 transition hover:bg-stone-50"
           >
             <ExternalLink className="size-4" aria-hidden />
             Ver página pública
@@ -211,15 +211,15 @@ function FormularioPersonalizacion({
         </div>
       </div>
 
-      <div className="grid items-start gap-8 lg:grid-cols-2">
+      <div className="grid items-start gap-8 xl:grid-cols-2">
         <form
           onSubmit={onSubmit}
           noValidate
-          className={`space-y-8 rounded-2xl bg-white p-6 shadow-lg ${vistaMovil === 'previa' ? 'hidden lg:block' : ''}`}
+          className={`space-y-8 rounded-2xl bg-white p-6 shadow-lg ${vistaMovil === 'previa' ? 'hidden xl:block' : ''}`}
         >
           <fieldset>
             <legend className="mb-1 font-semibold text-stone-800">Paleta de colores</legend>
-            <p className="mb-3 text-sm text-stone-500">Se usará en la portada, los títulos y los botones de tu página.</p>
+            <p className="mb-3 text-sm text-stone-600">Se usará en la portada, los títulos y los botones de tu página.</p>
             <SelectorPaleta
               primario={colores.primario}
               secundario={colores.secundario}
@@ -238,12 +238,12 @@ function FormularioPersonalizacion({
 
           <fieldset>
             <legend className="mb-1 font-semibold text-stone-800">Foto de portada</legend>
-            <p className="mb-3 text-sm text-stone-500">Una imagen horizontal y amplia: el paisaje, la casa, la huerta.</p>
+            <p className="mb-3 text-sm text-stone-600">Una imagen horizontal y amplia: el paisaje, la casa, la huerta.</p>
             <div className="relative aspect-[3/1] overflow-hidden rounded-xl bg-stone-100">
               {portadaMostrada ? (
                 <img src={portadaMostrada} alt="Foto de portada" className="size-full object-cover" />
               ) : (
-                <div className="flex size-full flex-col items-center justify-center gap-1 text-stone-400">
+                <div className="flex size-full flex-col items-center justify-center gap-1 text-stone-500">
                   <ImagePlus className="size-8" aria-hidden />
                   <span className="text-sm">Sin portada: se mostrará un degradado con tus colores</span>
                 </div>
@@ -260,13 +260,13 @@ function FormularioPersonalizacion({
               />
               <label
                 htmlFor="portada"
-                className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-stone-300 px-3 py-2 text-sm font-medium text-stone-700 transition hover:bg-stone-50"
+                className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border-2 border-stone-500 px-4 py-2.5 text-base font-semibold text-stone-700 transition hover:bg-stone-50"
               >
                 <ImagePlus className="size-4" aria-hidden />
                 {portadaMostrada ? 'Cambiar portada' : 'Subir portada'}
               </label>
               {portada.pendiente ? (
-                <button type="button" onClick={portada.descartar} className="text-sm text-stone-500 hover:text-stone-700 hover:underline">
+                <button type="button" onClick={portada.descartar} className="text-sm text-stone-600 hover:text-stone-700 hover:underline">
                   Descartar
                 </button>
               ) : emprendimiento.portada_url && !quitarPortada ? (
@@ -286,7 +286,7 @@ function FormularioPersonalizacion({
                   <button
                     type="button"
                     onClick={() => setQuitarPortada(false)}
-                    className="inline-flex items-center gap-1 text-sm text-stone-500 hover:text-stone-700 hover:underline"
+                    className="inline-flex items-center gap-1 text-sm text-stone-600 hover:text-stone-700 hover:underline"
                   >
                     <Undo2 className="size-4" aria-hidden />
                     Deshacer
@@ -294,7 +294,7 @@ function FormularioPersonalizacion({
                 )
               )}
             </div>
-            <p id="portada-ayuda" className="mt-1 text-xs text-stone-500">
+            <p id="portada-ayuda" className="mt-1 text-sm text-stone-600">
               {portada.pendiente
                 ? `${portada.pendiente.archivo.name} · se subirá al guardar`
                 : quitarPortada
@@ -329,7 +329,7 @@ function FormularioPersonalizacion({
 
           <fieldset className="space-y-3">
             <legend className="mb-1 font-semibold text-stone-800">Bloques opcionales</legend>
-            <p className="text-sm text-stone-500">
+            <p className="text-sm text-stone-600">
               Activa los que quieras mostrar. Si desactivas uno, el texto se guarda para cuando lo vuelvas a activar.
             </p>
             {TIPOS_BLOQUE.map((tipo) => {
@@ -343,7 +343,7 @@ function FormularioPersonalizacion({
                     </span>
                     <div className="min-w-0 flex-1">
                       <p className="font-medium text-stone-800">{titulo}</p>
-                      <p className="text-sm text-stone-500">{descripcion}</p>
+                      <p className="text-sm text-stone-600">{descripcion}</p>
                     </div>
                     <Interruptor
                       activo={activo}
@@ -365,7 +365,7 @@ function FormularioPersonalizacion({
                       />
                     </div>
                   ) : (
-                    contenido.trim() && <p className="mt-2 text-xs text-stone-400 italic">Oculto en tu página. El texto se conserva.</p>
+                    contenido.trim() && <p className="mt-2 text-sm text-stone-500 italic">Oculto en tu página. El texto se conserva.</p>
                   )}
                 </div>
               )
@@ -387,14 +387,14 @@ function FormularioPersonalizacion({
           <button
             type="submit"
             disabled={enviando}
-            className="w-full rounded-lg bg-campo-600 py-3 font-medium text-white shadow transition hover:bg-campo-700 disabled:cursor-not-allowed disabled:opacity-60"
+            className="w-full rounded-lg bg-campo-600 py-3 font-semibold text-white shadow transition hover:bg-campo-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {enviando ? 'Guardando…' : 'Guardar cambios'}
           </button>
         </form>
 
-        <aside aria-label="Vista previa" className={`lg:sticky lg:top-6 ${vistaMovil === 'editar' ? 'hidden lg:block' : ''}`}>
-          <p className="mb-2 flex items-center gap-1.5 text-sm font-medium text-stone-500">
+        <aside aria-label="Vista previa" className={`xl:sticky xl:top-6 ${vistaMovil === 'editar' ? 'hidden xl:block' : ''}`}>
+          <p className="mb-2 flex items-center gap-1.5 text-sm font-medium text-stone-600">
             <Eye className="size-4" aria-hidden />
             Vista previa: así verán tu página los visitantes
           </p>
