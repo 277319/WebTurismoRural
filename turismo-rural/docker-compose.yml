@@ -21,6 +21,7 @@ services:
     env_file: ./backend/.env
     environment:
       DATABASE_URL: postgresql+psycopg://turismo:turismo@db:5432/turismo_rural
+      MAIL_SERVER: mailpit
     ports:
       - "8000:8000"
     volumes:
@@ -28,6 +29,16 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      mailpit:
+        condition: service_started
+
+  # Servidor SMTP de desarrollo: atrapa los correos sin entregarlos y los muestra en http://localhost:8025
+  mailpit:
+    image: axllent/mailpit
+    restart: unless-stopped
+    ports:
+      - "1025:1025"
+      - "8025:8025"
 
 volumes:
   pgdata:

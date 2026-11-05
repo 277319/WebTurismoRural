@@ -23,12 +23,12 @@ export default function MisEmprendimientos() {
   return (
     <section className="w-full max-w-3xl">
       <div className="mb-4 flex items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold text-campo-700">Mis emprendimientos</h1>
+        <h1 className="text-3xl font-bold text-campo-700">Mis emprendimientos</h1>
         {!creando && emprendimientos && (
           <button
             type="button"
             onClick={() => setCreando(true)}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-campo-600 px-4 py-2 text-sm font-medium text-white shadow transition hover:bg-campo-700"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-campo-600 px-5 py-2.5 text-base font-semibold text-white shadow transition hover:bg-campo-700"
           >
             <Plus className="size-4" aria-hidden />
             Publicar nuevo
@@ -51,9 +51,9 @@ export default function MisEmprendimientos() {
       {error && !cargando ? (
         <ErrorCarga error={error} titulo="No pudimos cargar tus emprendimientos" onReintentar={recargar} />
       ) : !emprendimientos ? (
-        <p className="text-stone-500">Cargando…</p>
+        <p className="text-stone-600">Cargando…</p>
       ) : emprendimientos.length === 0 && !creando ? (
-        <p className="rounded-xl border border-dashed border-stone-300 p-6 text-center text-stone-500">
+        <p className="rounded-xl border border-dashed border-stone-300 p-6 text-center text-stone-600">
           Aún no tienes emprendimientos publicados.
         </p>
       ) : (
@@ -63,14 +63,14 @@ export default function MisEmprendimientos() {
             return (
               <li key={emp.id} className="flex items-center gap-4 rounded-xl bg-white p-4 shadow-sm">
                 <div className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-campo-100 text-campo-500">
-                  {foto ? <img src={foto} alt="" className="size-full object-cover" /> : <Store className="size-7" aria-hidden />}
+                  {foto ? <img src={foto} alt="" loading="lazy" decoding="async" className="size-full object-cover" /> : <Store className="size-7" aria-hidden />}
                 </div>
                 <div className="min-w-0 flex-1">
                   <h2 className="truncate font-semibold text-stone-800">{emp.nombre}</h2>
                   <p className="truncate text-sm text-stone-600">
                     {emp.direccion}, {emp.localidad}
                   </p>
-                  <p className="text-sm text-stone-500">Contacto: {emp.telefono_contacto}</p>
+                  <p className="text-sm text-stone-600">Contacto: {emp.telefono_contacto}</p>
                 </div>
                 <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
                   {(
@@ -83,7 +83,7 @@ export default function MisEmprendimientos() {
                     <Link
                       key={texto}
                       to={ruta}
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-stone-300 px-3 py-1.5 text-sm font-medium text-stone-700 transition hover:bg-stone-50"
+                      className="inline-flex items-center gap-1.5 rounded-lg border-2 border-stone-500 px-4 py-2.5 text-base font-semibold text-stone-700 transition hover:bg-stone-50"
                     >
                       <Icono className="size-4" aria-hidden />
                       {texto}
@@ -93,7 +93,7 @@ export default function MisEmprendimientos() {
                     type="button"
                     onClick={() => setAEliminar(emp)}
                     aria-label={`Eliminar «${emp.nombre}»`}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 px-3 py-1.5 text-sm font-medium text-red-600 transition hover:bg-red-50"
+                    className="inline-flex items-center gap-1.5 rounded-lg border-2 border-red-600 px-4 py-2.5 text-base font-semibold text-red-600 transition hover:bg-red-50"
                   >
                     <Trash2 className="size-4" aria-hidden />
                     Eliminar

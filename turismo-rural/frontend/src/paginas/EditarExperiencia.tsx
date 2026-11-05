@@ -29,13 +29,19 @@ export default function EditarExperiencia() {
       {error && !cargando ? (
         <ErrorCarga error={error} titulo="No pudimos cargar la experiencia" onReintentar={recargar} />
       ) : !datos ? (
-        <p className="text-stone-500">Cargando…</p>
+        <p className="text-stone-600">Cargando…</p>
       ) : (
         <FormularioEdicion
           key={datos.experiencia.id}
           experiencia={datos.experiencia}
           emprendimientos={datos.emprendimientos}
-          onGuardada={(experiencia) => setDatos((d) => ({ emprendimientos: d?.emprendimientos ?? [], experiencia }))}
+          onGuardada={(experiencia) =>
+            // La respuesta no trae reservas_pendientes: se conserva el conteo que ya teníamos
+            setDatos((d) => ({
+              emprendimientos: d?.emprendimientos ?? [],
+              experiencia: { reservas_pendientes: 0, ...d?.experiencia, ...experiencia },
+            }))
+          }
         />
       )}
     </section>
@@ -57,12 +63,12 @@ function FormularioEdicion({
     <>
       <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
         <div className="min-w-0">
-          <h1 className="text-2xl font-bold text-campo-700">Editar experiencia</h1>
+          <h1 className="text-3xl font-bold text-campo-700">Editar experiencia</h1>
           <p className="mt-0.5 truncate text-stone-600">{experiencia.titulo}</p>
         </div>
         <Link
           to={`/experiencias/${experiencia.id}/galeria`}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm font-medium text-stone-700 transition hover:bg-stone-50"
+          className="inline-flex items-center gap-1.5 rounded-lg border-2 border-stone-500 bg-white px-4 py-2.5 text-base font-semibold text-stone-700 transition hover:bg-stone-50"
         >
           <Images className="size-4" aria-hidden />
           Galería de fotos

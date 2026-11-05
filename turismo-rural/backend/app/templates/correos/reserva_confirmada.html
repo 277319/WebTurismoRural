@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% import "_componentes.html" as c with context %}
+
+{% block resumen %}{{ emprendimiento }} te espera el {{ fecha }}.{% endblock %}
+
+{% block contenido %}
+  {{ c.estado("Confirmada", "#36561f", "#e3eedb") }}
+  {{ c.titulo("¡Tu reserva está confirmada!") }}
+  {{ c.saludo(visitante) }}
+  <p style="margin: 0 0 12px">
+    {{ emprendimiento }} confirmó tu reserva para <strong>{{ experiencia }}</strong>. Te esperan el
+    <strong>{{ fecha }}</strong>.
+  </p>
+  {{ c.detalle() }}
+  {% if not gratuita %}
+    {{ c.aviso((metodo_pago ~ ": " ~ indicacion_pago|lower ~ ". " if metodo_pago else "") ~ "Total a pagar: " ~ total ~ ".") }}
+  {% endif %}
+  {{ c.contacto_anfitrion() }}
+  {{ c.boton(url_mis_reservas, "Ver mis reservas") }}
+{% endblock %}

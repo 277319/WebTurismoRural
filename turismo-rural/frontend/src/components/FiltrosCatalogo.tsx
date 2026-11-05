@@ -106,11 +106,11 @@ export default function FiltrosCatalogo({ localidad, tipos, precioMin, precioMax
         onClick={() => setAbierto((a) => !a)}
         aria-expanded={abierto}
         aria-controls="panel-filtros"
-        className="mb-3 inline-flex items-center gap-2 rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm font-medium text-stone-700 shadow-sm transition hover:bg-stone-50 sm:hidden"
+        className="mb-3 inline-flex items-center gap-2 rounded-lg border-2 border-stone-500 bg-white px-4 py-2.5 text-base font-semibold text-stone-700 shadow-sm transition hover:bg-stone-50 sm:hidden"
       >
         <SlidersHorizontal className="size-4" aria-hidden />
         Filtros
-        {activos > 0 && <span className="rounded-full bg-campo-600 px-1.5 text-xs text-white">{activos}</span>}
+        {activos > 0 && <span className="rounded-full bg-campo-600 px-1.5 text-sm text-white">{activos}</span>}
       </button>
 
       <div
@@ -119,7 +119,7 @@ export default function FiltrosCatalogo({ localidad, tipos, precioMin, precioMax
         aria-label="Filtrar experiencias"
         className={`space-y-5 rounded-2xl bg-white p-4 shadow-sm sm:block sm:p-5 ${abierto ? '' : 'hidden'}`}
       >
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-4 md:grid-cols-2 md:items-end">
           <div>
             <CampoTexto
               id="filtro-localidad"
@@ -142,7 +142,7 @@ export default function FiltrosCatalogo({ localidad, tipos, precioMin, precioMax
           </div>
 
           <fieldset>
-            <legend className="mb-1 block text-sm font-medium text-stone-700">Precio por persona</legend>
+            <legend className="mb-1 block text-base font-semibold text-stone-800">Precio por persona</legend>
             <div className="grid grid-cols-2 gap-3">
               <CampoTexto
                 id="filtro-precio-min"
@@ -173,7 +173,7 @@ export default function FiltrosCatalogo({ localidad, tipos, precioMin, precioMax
         </div>
 
         <fieldset>
-          <legend className="mb-2 block text-sm font-medium text-stone-700">Tipo de experiencia</legend>
+          <legend className="mb-2 block text-base font-semibold text-stone-800">Tipo de experiencia</legend>
           <div className="flex flex-wrap gap-2">
             {TIPOS_EXPERIENCIA.map(({ id, nombre, Icono }) => {
               const activo = tipos.includes(id)
@@ -186,7 +186,7 @@ export default function FiltrosCatalogo({ localidad, tipos, precioMin, precioMax
                   className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-medium transition focus-visible:ring-2 focus-visible:ring-campo-500 focus-visible:ring-offset-1 focus-visible:outline-none ${
                     activo
                       ? 'border-campo-600 bg-campo-600 text-white shadow-sm hover:bg-campo-700'
-                      : 'border-stone-300 bg-white text-stone-600 hover:border-campo-500 hover:text-campo-700'
+                      : 'border-stone-500 bg-white text-stone-600 hover:border-campo-500 hover:text-campo-700'
                   }`}
                 >
                   <Icono className="size-4" aria-hidden />
@@ -201,7 +201,7 @@ export default function FiltrosCatalogo({ localidad, tipos, precioMin, precioMax
           <button
             type="button"
             onClick={() => onCambiar({ localidad: null, tipo: null, precio_min: null, precio_max: null })}
-            className="inline-flex items-center gap-1 text-sm font-medium text-stone-500 hover:text-stone-800 hover:underline"
+            className="inline-flex items-center gap-1 text-sm font-medium text-stone-600 hover:text-stone-800 hover:underline"
           >
             <X className="size-4" aria-hidden />
             Limpiar filtros

@@ -26,6 +26,7 @@ def registro(datos: UsuarioRegistro, db: Session = Depends(get_db)) -> Usuario:
         raise HTTPException(status.HTTP_409_CONFLICT, detail={"campo": "telefono", "mensaje": "Este teléfono ya está registrado"})
 
     usuario = Usuario(
+        nombre=datos.nombre,
         correo=datos.correo,
         telefono=datos.telefono,
         contrasena_hash=hash_password(datos.contrasena),

@@ -66,12 +66,12 @@ export default function GaleriaFotos({ fotos, titulo, IconoVacio }: Props) {
           type="button"
           onClick={() => dialogo.current?.showModal()}
           aria-label="Ver a pantalla completa"
-          className="absolute top-3 right-3 flex size-9 items-center justify-center rounded-full bg-white/90 text-stone-700 shadow transition hover:bg-white"
+          className="absolute top-3 right-3 flex size-12 items-center justify-center rounded-full bg-white/90 text-stone-700 shadow transition hover:bg-white"
         >
           <Expand className="size-4" aria-hidden />
         </button>
         {varias && (
-          <span className="absolute right-3 bottom-3 rounded-full bg-black/60 px-2.5 py-0.5 text-xs font-medium text-white" aria-hidden>
+          <span className="absolute right-3 bottom-3 rounded-full bg-black/60 px-2.5 py-0.5 text-sm font-medium text-white" aria-hidden>
             {actual + 1} / {fotos.length}
           </span>
         )}

@@ -8,7 +8,7 @@ import { datosFicha } from '../fichaEmprendimiento'
 import { useCarga } from '../hooks/useCarga'
 
 const claseBoton =
-  'inline-flex items-center gap-1.5 rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm font-medium text-stone-700 transition hover:bg-stone-50'
+  'inline-flex items-center gap-1.5 rounded-lg border-2 border-stone-500 bg-white px-4 py-2.5 text-base font-semibold text-stone-700 transition hover:bg-stone-50'
 
 /** Página pública de un emprendimiento, con sus colores y contenidos personalizados. */
 export default function PaginaEmprendimiento() {
@@ -22,7 +22,7 @@ export default function PaginaEmprendimiento() {
       {error && !cargando ? (
         <ErrorCarga error={error} titulo="No pudimos cargar el emprendimiento" onReintentar={recargar} />
       ) : !datos ? (
-        <p className="text-stone-500">Cargando…</p>
+        <p className="text-stone-600">Cargando…</p>
       ) : (
         <>
           {datos.usuario_id === usuario?.id && (

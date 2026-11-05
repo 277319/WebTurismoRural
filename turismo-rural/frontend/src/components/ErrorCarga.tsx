@@ -26,10 +26,10 @@ export default function ErrorCarga({ error, titulo, onReintentar }: Props) {
         <button
           type="button"
           onClick={onReintentar}
-          className="mt-5 inline-flex items-center gap-2 rounded-lg bg-campo-600 px-4 py-2 text-sm font-medium text-white shadow transition hover:bg-campo-700"
+          className="mt-5 inline-flex items-center gap-2 rounded-lg bg-campo-600 px-5 py-2.5 text-base font-semibold text-white shadow transition hover:bg-campo-700"
         >
           <RefreshCw className="size-4" aria-hidden />
-          Reintentar
+          Intentar de nuevo
         </button>
       )}
     </div>

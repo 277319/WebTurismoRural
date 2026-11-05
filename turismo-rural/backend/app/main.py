@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from app.core.config import settings
-from app.routers import auth, emprendimientos, experiencias, usuarios
+from app.routers import auth, emprendimientos, experiencias, pagos, reservas, usuarios
 
 app = FastAPI(title="Turismo Rural API")
 
@@ -26,6 +26,8 @@ app.include_router(auth.router)
 app.include_router(emprendimientos.router)
 app.include_router(usuarios.router)
 app.include_router(experiencias.router)
+app.include_router(reservas.router)
+app.include_router(pagos.router)
 
 # Fotos subidas por los usuarios (p. ej. /uploads/emprendimientos/abc123.jpg)
 Path(settings.UPLOADS_DIR).mkdir(parents=True, exist_ok=True)

@@ -6,8 +6,8 @@ from sqlalchemy.orm import Session
 from app.core.db import get_db
 from app.core.deps import get_usuario_actual
 from app.core.security import verify_password
-from app.models.usuario import Usuario
-from app.schemas.usuario import UsuarioActualizar, UsuarioPublico
+from app.models.usuario import RolUsuario, Usuario
+from app.schemas.usuario import UsuarioActualizar, UsuarioPublico, exigir_nombre
 
 router = APIRouter(prefix="/usuarios", tags=["usuarios"])
 
@@ -49,6 +49,14 @@ def actualizar_mi_cuenta(
         if db.scalar(select(Usuario.id).where(Usuario.telefono == datos.telefono, Usuario.id != usuario.id)):
             raise _conflicto("telefono", "Este teléfono ya está registrado")
 
+    if usuario.rol == RolUsuario.visitante:
+        try:
+            exigir_nombre(datos.nombre)
+        except ValueError as e:
+            # Sin nombre, el anfitrión no sabría quién reserva
+            raise HTTPException(
+                status.HTTP_422_UNPROCESSABLE_ENTITY, detail={"campo": "nombre", "mensaje": str(e)}
+            ) from e
     usuario.nombre = datos.nombre
     usuario.correo = datos.correo
     usuario.telefono = datos.telefono

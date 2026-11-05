@@ -1,0 +1,74 @@
+{# Piezas comunes de los correos. Se importan "with context" para leer los datos de la reserva. #}
+
+{% macro estado(texto, color, fondo) -%}
+  <span
+    style="display: inline-block; padding: 3px 10px; border-radius: 999px; background: {{ fondo }}; color: {{ color }}; font-size: 12px; font-weight: bold"
+    >{{ texto }}</span
+  >
+{%- endmacro %}
+
+{% macro titulo(texto) -%}
+  <h1 style="margin: 12px 0 8px; font-size: 22px; line-height: 1.3; color: #36561f">{{ texto }}</h1>
+{%- endmacro %}
+
+{% macro saludo(nombre) -%}
+  <p style="margin: 0 0 12px">Hola{% if nombre %} {{ nombre }}{% endif %}:</p>
+{%- endmacro %}
+
+{% macro fila(etiqueta, valor) -%}
+  <tr>
+    <td style="padding: 6px 0; width: 40%; color: #78716c; font-size: 14px; vertical-align: top">{{ etiqueta }}</td>
+    <td style="padding: 6px 0; font-size: 14px; font-weight: bold; color: #292524">{{ valor }}</td>
+  </tr>
+{%- endmacro %}
+
+{% macro detalle() -%}
+  <table
+    role="presentation"
+    width="100%"
+    cellpadding="0"
+    cellspacing="0"
+    style="margin: 20px 0; padding: 12px 16px; background: #f6f9f3; border-radius: 10px"
+  >
+    {{ fila("Experiencia", experiencia) }}
+    {{ fila("Anfitrión", emprendimiento ~ " · " ~ localidad) }}
+    {% if salida %}
+      {{ fila("Llegada", fecha) }}
+      {{ fila("Salida", salida) }}
+      {{ fila("Noches", noches) }}
+    {% else %}
+      {{ fila("Fecha", fecha) }}
+    {% endif %}
+    {{ fila("Personas", personas) }}
+    {{ fila("Total", total) }}
+    {% if metodo_pago %}{{ fila("Método de pago", metodo_pago) }}{% endif %}
+    {{ fila("Código de reserva", "#" ~ codigo) }}
+  </table>
+{%- endmacro %}
+
+{% macro aviso(contenido, color="#a0673a", fondo="#fbf5ef") -%}
+  <p style="margin: 0 0 20px; padding: 12px 16px; border-left: 4px solid {{ color }}; background: {{ fondo }}; border-radius: 4px; font-size: 14px">
+    {{ contenido }}
+  </p>
+{%- endmacro %}
+
+{% macro boton(url, texto) -%}
+  <table role="presentation" cellpadding="0" cellspacing="0" style="margin: 24px 0 8px">
+    <tr>
+      <td style="border-radius: 8px; background: #47702e">
+        <a
+          href="{{ url }}"
+          style="display: inline-block; padding: 12px 22px; color: #ffffff; font-weight: bold; font-size: 15px; text-decoration: none"
+          >{{ texto }}</a
+        >
+      </td>
+    </tr>
+  </table>
+{%- endmacro %}
+
+{% macro contacto_anfitrion() -%}
+  <p style="margin: 0; font-size: 14px; color: #57534e">
+    ¿Dudas? Contacta a {{ emprendimiento }} al
+    <a href="tel:{{ telefono_anfitrion }}" style="color: #47702e; font-weight: bold">{{ telefono_anfitrion }}</a>.
+  </p>
+{%- endmacro %}

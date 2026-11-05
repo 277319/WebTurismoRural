@@ -11,6 +11,19 @@ export function telefonoValido(valor: string) {
   return TELEFONO_RE.test(limpiarTelefono(valor))
 }
 
+/** Nombre sin espacios sobrantes */
+export function normalizarNombre(valor: string) {
+  return valor.split(/\s+/).filter(Boolean).join(' ')
+}
+
+/** Mismas reglas que el backend; `obligatorio` para los visitantes, que necesitan nombre para reservar */
+export function errorNombre(valor: string, obligatorio: boolean): string | undefined {
+  const nombre = normalizarNombre(valor)
+  if (!nombre) return obligatorio ? 'Ingresa tu nombre' : undefined
+  if (nombre.length > 100) return 'Máximo 100 caracteres'
+  if (!/\p{L}/u.test(nombre)) return 'El nombre debe contener letras'
+}
+
 export type CampoEmprendimiento = 'nombre' | 'telefono_contacto' | 'direccion' | 'localidad'
 export type DatosEmprendimiento = Record<CampoEmprendimiento, string>
 export type ErroresEmprendimiento = Partial<Record<CampoEmprendimiento, string>>

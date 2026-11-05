@@ -56,6 +56,66 @@ npm run dev
 
 App en http://localhost:5173 (las peticiones a `/api` se redirigen al backend).
 
+## Correos
+
+Los cambios de estado de una reserva se avisan por correo con
+[fastapi-mail](https://sabuhish.github.io/fastapi-mail/), como tareas en segundo plano
+(`BackgroundTasks`): la respuesta no espera al envío, y si falla solo queda en el log.
+
+| Evento                          | Destinatario          | Plantilla                 |
+| ------------------------------- | --------------------- | ------------------------- |
+| Nueva solicitud (`POST /reservas`) | visitante y anfitrión | `nueva_solicitud.html`    |
+| `PATCH /reservas/{id}/confirmar`   | visitante             | `reserva_confirmada.html` |
+| `PATCH /reservas/{id}/rechazar`    | visitante             | `reserva_rechazada.html`  |
+| `PATCH /reservas/{id}/marcar-pagada` | visitante           | `reserva_pagada.html`     |
+
+Las plantillas Jinja están en `backend/app/templates/correos/` (`base.html` es el diseño común y
+`_componentes.html` las piezas compartidas). Los usuarios registrados solo con teléfono no reciben correos.
+
+En desarrollo, `docker compose up -d` levanta **Mailpit**, que atrapa los correos sin entregarlos:
+se ven en http://localhost:8025. Para un SMTP real, define en `backend/.env`:
+
+```env
+MAIL_SERVER=smtp.ejemplo.com
+MAIL_PORT=587
+MAIL_USERNAME=usuario
+MAIL_PASSWORD=contraseña
+MAIL_FROM=reservas@tudominio.cl
+MAIL_STARTTLS=true
+FRONTEND_URL=https://tudominio.cl   # para los enlaces de los correos
+```
+
+`MAIL_ENVIAR=false` desactiva el envío.
+
+## Pagos en línea
+
+Cuando el anfitrión confirma una reserva con precio, el visitante puede pagarla desde **Mis reservas**:
+
+1. `POST /pagos` crea el cobro en el proveedor y devuelve la página donde se paga.
+2. El visitante paga allí y vuelve a `/pagos/{id}/exito` o `/pagos/{id}/fallo`.
+3. El proveedor avisa el resultado a `POST /pagos/webhook`. Recién entonces la reserva pasa a
+   **pagada** y se envía `reserva_pagada.html`. La página de éxito consulta el pago hasta que llega el aviso.
+
+Los proveedores implementan la interfaz `ProveedorPago` (`backend/app/pagos/base.py`): crear un
+cobro y leer sus avisos. Para agregar otro, se implementan esos dos métodos y se registra en
+`app/pagos/__init__.py`. Se elige con `PROVEEDOR_PAGO`:
+
+- **`simulado`** (por defecto): pasarela de prueba propia, sin dinero real ni cuentas externas. Su
+  página (`/pagos/{id}/simulado`) deja aprobar o rechazar el pago, y el resultado llega al webhook
+  como un aviso HTTP firmado, igual que el de un proveedor real.
+- **`mercadopago`**: Checkout Pro de Mercado Pago. Con credenciales de prueba se paga en su sandbox,
+  con [tarjetas de prueba](https://www.mercadopago.cl/developers/es/docs/checkout-pro/additional-content/your-integrations/test/cards).
+  El aviso tiene que poder llegar al backend desde internet: en desarrollo, un túnel como
+  `ngrok http 8000`.
+
+```env
+PROVEEDOR_PAGO=mercadopago
+MP_ACCESS_TOKEN=TEST-...           # Tus integraciones > Credenciales de prueba
+MP_WEBHOOK_SECRET=...              # Tus integraciones > Webhooks (opcional: verifica la firma)
+MP_SANDBOX=true
+BACKEND_URL=https://xxxx.ngrok-free.app
+```
+
 ## Migraciones
 
 ```bash

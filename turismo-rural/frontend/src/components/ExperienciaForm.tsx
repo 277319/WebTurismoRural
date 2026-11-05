@@ -4,6 +4,7 @@ import { ErrorApi } from '../api/cliente'
 import type { Emprendimiento } from '../api/emprendimientos'
 import { mensajeDeError } from '../api/errores'
 import type { DatosExperiencia, EstadoExperiencia, Experiencia, TipoExperiencia } from '../api/experiencias'
+import { esHospedaje } from '../tiposExperiencia'
 import CampoArea from './CampoArea'
 import CampoTexto from './CampoTexto'
 import SelectorTipo from './SelectorTipo'
@@ -136,6 +137,8 @@ export default function ExperienciaForm({
 
   const errores = validar(valores)
   const errorDe = (c: Campo) => erroresServidor[c] ?? (tocados[c] ? errores[c] : undefined)
+  // Los hospedajes cobran por noche y su capacidad es de huéspedes por noche
+  const hospedaje = valores.tipo !== null && esHospedaje(valores.tipo)
   const tocar = (c: Campo) => setTocados((t) => ({ ...t, [c]: true }))
 
   function cambiar<K extends keyof Valores>(campo: K, valor: Valores[K]) {
@@ -211,14 +214,14 @@ export default function ExperienciaForm({
     <form onSubmit={onSubmit} noValidate className="space-y-6 rounded-2xl bg-white p-6 shadow-lg sm:p-8">
       {emprendimientos.length > 1 && (
         <div>
-          <label htmlFor="exp-emprendimiento" className="mb-1 block text-sm font-medium text-stone-700">
+          <label htmlFor="exp-emprendimiento" className="mb-1 block text-base font-semibold text-stone-800">
             Emprendimiento
           </label>
           <select
             id="exp-emprendimiento"
             value={valores.emprendimiento_id}
             onChange={(e) => cambiar('emprendimiento_id', e.target.value)}
-            className="w-full rounded-lg border border-stone-300 bg-white px-3 py-2 outline-none focus:border-campo-500 focus:ring-2 focus:ring-campo-100"
+            className="w-full rounded-lg border-2 border-stone-500 bg-white px-3 py-2 outline-none focus:border-campo-500 focus:ring-2 focus:ring-campo-100"
           >
             {emprendimientos.map((emp) => (
               <option key={emp.id} value={emp.id}>
@@ -259,7 +262,7 @@ export default function ExperienciaForm({
       <div className="grid gap-4 sm:grid-cols-2">
         <CampoTexto
           id="exp-precio"
-          label="Precio por persona"
+          label={hospedaje ? 'Precio por persona y noche' : 'Precio por persona'}
           type="number"
           inputMode="decimal"
           min={0}
@@ -281,7 +284,7 @@ export default function ExperienciaForm({
           max={1000}
           step={1}
           placeholder="10"
-          ayuda="Personas por salida o sesión."
+          ayuda={hospedaje ? 'Huéspedes que recibes por noche.' : 'Personas por salida o sesión.'}
           value={valores.capacidad_maxima}
           error={errorDe('capacidad_maxima')}
           onChange={(v) => cambiar('capacidad_maxima', v)}
@@ -302,10 +305,10 @@ export default function ExperienciaForm({
       />
 
       <fieldset>
-        <legend className="mb-1 text-sm font-medium text-stone-700">
-          Coordenadas <span className="font-normal text-stone-400">(opcional)</span>
+        <legend className="mb-1 text-base font-semibold text-stone-800">
+          Coordenadas <span className="font-normal text-stone-500">(opcional)</span>
         </legend>
-        <p className="mb-3 text-xs text-stone-500">Ayudan a los visitantes a encontrar el punto de encuentro.</p>
+        <p className="mb-3 text-sm text-stone-600">Ayudan a los visitantes a encontrar el punto de encuentro.</p>
         <div className="grid gap-4 sm:grid-cols-2">
           <CampoTexto
             id="exp-latitud"
@@ -341,7 +344,7 @@ export default function ExperienciaForm({
             type="button"
             onClick={usarMiUbicacion}
             disabled={ubicando}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-stone-300 px-3 py-1.5 text-sm font-medium text-stone-700 transition hover:bg-stone-50 disabled:opacity-60"
+            className="inline-flex items-center gap-1.5 rounded-lg border-2 border-stone-500 px-4 py-2.5 text-base font-semibold text-stone-700 transition hover:bg-stone-50 disabled:opacity-60"
           >
             <LocateFixed className="size-4" aria-hidden />
             {ubicando ? 'Obteniendo ubicación…' : 'Usar mi ubicación actual'}
@@ -362,7 +365,7 @@ export default function ExperienciaForm({
       </fieldset>
 
       <fieldset>
-        <legend className="mb-2 text-sm font-medium text-stone-700">Estado</legend>
+        <legend className="mb-2 text-base font-semibold text-stone-800">Estado</legend>
         <div className="grid gap-3 sm:grid-cols-2">
           {(
             [
@@ -373,7 +376,7 @@ export default function ExperienciaForm({
             <label
               key={id}
               className={`flex cursor-pointer items-center gap-3 rounded-xl border-2 p-3 transition has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-campo-500 ${
-                valores.estado === id ? 'border-campo-500 bg-campo-50' : 'border-stone-200 hover:border-campo-500'
+                valores.estado === id ? 'border-campo-500 bg-campo-50' : 'border-stone-400 hover:border-campo-500'
               }`}
             >
               <input
@@ -384,10 +387,10 @@ export default function ExperienciaForm({
                 onChange={() => cambiar('estado', id)}
                 className="sr-only"
               />
-              <Icono className={`size-5 ${valores.estado === id ? 'text-campo-600' : 'text-stone-400'}`} aria-hidden />
+              <Icono className={`size-5 ${valores.estado === id ? 'text-campo-600' : 'text-stone-500'}`} aria-hidden />
               <span>
                 <span className="block text-sm font-medium text-stone-800">{nombre}</span>
-                <span className="block text-xs text-stone-500">{detalle}</span>
+                <span className="block text-sm text-stone-600">{detalle}</span>
               </span>
             </label>
           ))}
@@ -404,7 +407,7 @@ export default function ExperienciaForm({
       <button
         type="submit"
         disabled={enviando}
-        className="w-full rounded-lg bg-campo-600 py-3 font-medium text-white shadow transition hover:bg-campo-700 disabled:cursor-not-allowed disabled:opacity-60"
+        className="w-full rounded-lg bg-campo-600 py-3 font-semibold text-white shadow transition hover:bg-campo-700 disabled:cursor-not-allowed disabled:opacity-60"
       >
         {enviando ? textoEnviando : textoEnviar}
       </button>

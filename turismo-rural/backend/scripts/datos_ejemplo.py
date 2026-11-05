@@ -182,6 +182,19 @@ EXPERIENCIAS = [
         "pausado",
         "amanecer",
     ),
+    (
+        "hospedaje",
+        "Cabaña junto al río Maichín",
+        "Cabaña de madera nativa para hasta cuatro personas, a pasos del río y rodeada de bosque. Tiene "
+        "estufa a leña, cocina equipada y una terraza con vista al volcán Lanín.\n\nLlegada desde las 15:00 "
+        "y salida hasta las 11:00.\nIncluye leña, ropa de cama y desayuno de campo con pan amasado.",
+        Decimal("28000"),
+        4,
+        "Curarrehue",
+        (-39.3567, -71.5915),
+        "activo",
+        "atardecer",
+    ),
 ]
 
 FOTOS_POR_EXPERIENCIA = 3

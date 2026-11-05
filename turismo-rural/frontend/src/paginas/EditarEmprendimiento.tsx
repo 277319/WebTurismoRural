@@ -56,7 +56,7 @@ export default function EditarEmprendimiento() {
       {error && !cargando ? (
         <ErrorCarga error={error} titulo="No pudimos cargar el emprendimiento" onReintentar={recargar} />
       ) : !datos ? (
-        <p className="text-stone-500">Cargando…</p>
+        <p className="text-stone-600">Cargando…</p>
       ) : datos.usuario_id !== usuario?.id ? (
         <ErrorCarga
           error={new Error('Solo el dueño puede editar este emprendimiento.')}
@@ -180,11 +180,11 @@ function FormularioEdicion({
   return (
     <>
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold text-campo-700">Editar emprendimiento</h1>
+        <h1 className="text-3xl font-bold text-campo-700">Editar emprendimiento</h1>
         <div className="flex flex-wrap items-center gap-3">
           <Link
             to={`/emprendimientos/${emprendimiento.id}/personalizar`}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm font-medium text-stone-700 transition hover:bg-stone-50"
+            className="inline-flex items-center gap-1.5 rounded-lg border-2 border-stone-500 bg-white px-4 py-2.5 text-base font-semibold text-stone-700 transition hover:bg-stone-50"
           >
             <Paintbrush className="size-4" aria-hidden />
             Personalizar página
@@ -193,11 +193,11 @@ function FormularioEdicion({
         </div>
       </div>
 
-      <div className="grid items-start gap-8 lg:grid-cols-2">
+      <div className="grid items-start gap-8 xl:grid-cols-2">
         <form
           onSubmit={onSubmit}
           noValidate
-          className={`space-y-6 rounded-2xl bg-white p-6 shadow-lg ${vistaMovil === 'previa' ? 'hidden lg:block' : ''}`}
+          className={`space-y-6 rounded-2xl bg-white p-6 shadow-lg ${vistaMovil === 'previa' ? 'hidden xl:block' : ''}`}
         >
           <fieldset>
             <legend className="mb-3 font-semibold text-stone-800">Foto de perfil</legend>
@@ -220,7 +220,7 @@ function FormularioEdicion({
                 />
                 <label
                   htmlFor="foto"
-                  className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-stone-300 px-3 py-2 text-sm font-medium text-stone-700 transition hover:bg-stone-50"
+                  className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border-2 border-stone-500 px-4 py-2.5 text-base font-semibold text-stone-700 transition hover:bg-stone-50"
                 >
                   <ImagePlus className="size-4" aria-hidden />
                   {fotoMostrada ? 'Cambiar foto' : 'Subir foto'}
@@ -229,12 +229,12 @@ function FormularioEdicion({
                   <button
                     type="button"
                     onClick={foto.descartar}
-                    className="ml-2 text-sm text-stone-500 hover:text-stone-700 hover:underline"
+                    className="ml-2 text-sm text-stone-600 hover:text-stone-700 hover:underline"
                   >
                     Descartar
                   </button>
                 )}
-                <p id="foto-ayuda" className="mt-1 text-xs text-stone-500">
+                <p id="foto-ayuda" className="mt-1 text-sm text-stone-600">
                   {foto.pendiente ? `${foto.pendiente.archivo.name} · se subirá al guardar` : `JPG, PNG o WebP, hasta ${MAX_IMAGEN_MB} MB`}
                 </p>
               </div>
@@ -280,7 +280,7 @@ function FormularioEdicion({
 
           <fieldset className="space-y-4">
             <legend className="mb-1 font-semibold text-stone-800">Redes de contacto</legend>
-            <p className="text-sm text-stone-500">Todas son opcionales. Puedes pegar el enlace de tu perfil.</p>
+            <p className="text-sm text-stone-600">Todas son opcionales. Puedes pegar el enlace de tu perfil.</p>
             {CAMPOS_REDES.map((red) => {
               const { nombre, Icono, placeholder, prefijo } = REDES_INFO[red]
               return (
@@ -321,7 +321,7 @@ function FormularioEdicion({
           <button
             type="submit"
             disabled={enviando}
-            className="w-full rounded-lg bg-campo-600 py-3 font-medium text-white shadow transition hover:bg-campo-700 disabled:cursor-not-allowed disabled:opacity-60"
+            className="w-full rounded-lg bg-campo-600 py-3 font-semibold text-white shadow transition hover:bg-campo-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {enviando ? 'Guardando…' : 'Guardar cambios'}
           </button>
@@ -329,9 +329,9 @@ function FormularioEdicion({
 
         <aside
           aria-label="Vista previa"
-          className={`lg:sticky lg:top-6 ${vistaMovil === 'editar' ? 'hidden lg:block' : ''}`}
+          className={`xl:sticky xl:top-6 ${vistaMovil === 'editar' ? 'hidden xl:block' : ''}`}
         >
-          <p className="mb-2 flex items-center gap-1.5 text-sm font-medium text-stone-500">
+          <p className="mb-2 flex items-center gap-1.5 text-sm font-medium text-stone-600">
             <Eye className="size-4" aria-hidden />
             Vista previa: así verán tu emprendimiento los visitantes
           </p>

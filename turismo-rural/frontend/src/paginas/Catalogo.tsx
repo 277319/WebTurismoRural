@@ -67,10 +67,29 @@ export default function Catalogo() {
 
   return (
     <section className="w-full">
-      <div className="mb-8 text-center">
-        <h1 className="text-3xl font-bold text-campo-700 sm:text-4xl">Experiencias rurales</h1>
-        <p className="mt-2 text-stone-600">Descubre actividades únicas junto a emprendedores locales.</p>
+      <div className="mb-6 text-center">
+        <h1 className="text-3xl font-bold text-campo-700 sm:text-4xl">Experiencias</h1>
+        <p className="mt-2 text-lg text-stone-700">Descubre actividades únicas junto a emprendedores locales.</p>
       </div>
+
+      {/* Guía corta para quien reserva por primera vez */}
+      <ol className="mb-8 grid gap-3 sm:grid-cols-3" aria-label="Cómo reservar">
+        {[
+          ['Elige', 'Busca una experiencia y toca su nombre para ver los detalles.'],
+          ['Reserva', 'Elige la fecha y cuántas personas van. El anfitrión confirma.'],
+          ['Disfruta', 'Revisa tus reservas en «Mis reservas» del menú.'],
+        ].map(([titulo, texto], i) => (
+          <li key={titulo} className="flex items-start gap-3 rounded-xl bg-white p-4 shadow-sm">
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-full bg-campo-700 text-lg font-bold text-white" aria-hidden>
+              {i + 1}
+            </span>
+            <span>
+              <span className="block text-lg font-semibold text-stone-800">{titulo}</span>
+              <span className="block text-base text-stone-700">{texto}</span>
+            </span>
+          </li>
+        ))}
+      </ol>
 
       <FiltrosCatalogo
         localidad={localidad}
@@ -87,24 +106,24 @@ export default function Catalogo() {
         <Esqueleto />
       ) : datos && datos.total === 0 && hayFiltros ? (
         <div className={`flex flex-col items-center rounded-2xl border border-dashed border-stone-300 bg-white p-10 text-center ${cargando ? 'opacity-60' : ''}`}>
-          <SearchX className="mb-3 size-10 text-stone-400" aria-hidden />
+          <SearchX className="mb-3 size-10 text-stone-500" aria-hidden />
           <p className="font-medium text-stone-700" aria-live="polite">
             No encontramos experiencias con estos filtros
           </p>
-          <p className="mt-1 text-sm text-stone-500">Prueba con otra localidad, un rango de precio más amplio u otros tipos.</p>
+          <p className="mt-1 text-sm text-stone-600">Prueba con otra localidad, un rango de precio más amplio u otros tipos.</p>
           <button
             type="button"
             onClick={limpiarFiltros}
-            className="mt-4 rounded-lg bg-campo-600 px-4 py-2 text-sm font-medium text-white shadow transition hover:bg-campo-700"
+            className="mt-4 rounded-lg bg-campo-600 px-5 py-2.5 text-base font-semibold text-white shadow transition hover:bg-campo-700"
           >
             Limpiar filtros
           </button>
         </div>
       ) : datos && datos.total === 0 ? (
         <div className="flex flex-col items-center rounded-2xl border border-dashed border-stone-300 bg-white p-10 text-center">
-          <Compass className="mb-3 size-10 text-stone-400" aria-hidden />
+          <Compass className="mb-3 size-10 text-stone-500" aria-hidden />
           <p className="font-medium text-stone-700">Aún no hay experiencias publicadas</p>
-          <p className="mt-1 text-sm text-stone-500">Vuelve pronto: los anfitriones están preparando nuevas actividades.</p>
+          <p className="mt-1 text-sm text-stone-600">Vuelve pronto: los anfitriones están preparando nuevas actividades.</p>
         </div>
       ) : datos && datos.items.length === 0 ? (
         // La página pedida no existe (p. ej. ?pagina=99)
@@ -117,11 +136,11 @@ export default function Catalogo() {
       ) : (
         datos && (
           <>
-            <p className="mb-4 text-sm text-stone-500" aria-live="polite">
+            <p className="mb-4 text-sm text-stone-600" aria-live="polite">
               {datos.total} {datos.total === 1 ? 'experiencia' : 'experiencias'}
               {hayFiltros && (datos.total === 1 ? ' encontrada' : ' encontradas')}
             </p>
-            <ul className={`grid gap-6 sm:grid-cols-2 lg:grid-cols-3 ${cargando ? 'opacity-60' : ''}`} aria-busy={cargando}>
+            <ul className={`grid gap-6 md:grid-cols-2 2xl:grid-cols-3 ${cargando ? 'opacity-60' : ''}`} aria-busy={cargando}>
               {datos.items.map((exp) => (
                 <li key={exp.id} className="flex">
                   <TarjetaExperiencia experiencia={exp} />
@@ -135,7 +154,7 @@ export default function Catalogo() {
                   type="button"
                   onClick={() => irA(pagina - 1)}
                   disabled={pagina <= 1 || cargando}
-                  className="inline-flex items-center gap-1 rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm font-medium text-stone-700 transition hover:bg-stone-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="inline-flex items-center gap-1 rounded-lg border-2 border-stone-500 bg-white px-4 py-2.5 text-base font-semibold text-stone-700 transition hover:bg-stone-50 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <ChevronLeft className="size-4" aria-hidden />
                   Anterior
@@ -147,7 +166,7 @@ export default function Catalogo() {
                   type="button"
                   onClick={() => irA(pagina + 1)}
                   disabled={pagina >= datos.paginas || cargando}
-                  className="inline-flex items-center gap-1 rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm font-medium text-stone-700 transition hover:bg-stone-50 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="inline-flex items-center gap-1 rounded-lg border-2 border-stone-500 bg-white px-4 py-2.5 text-base font-semibold text-stone-700 transition hover:bg-stone-50 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   Siguiente
                   <ChevronRight className="size-4" aria-hidden />
@@ -163,7 +182,7 @@ export default function Catalogo() {
 
 function Esqueleto() {
   return (
-    <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3" aria-label="Cargando experiencias" aria-busy>
+    <ul className="grid gap-6 md:grid-cols-2 2xl:grid-cols-3" aria-label="Cargando experiencias" aria-busy>
       {Array.from({ length: 6 }, (_, i) => (
         <li key={i} className="animate-pulse overflow-hidden rounded-2xl bg-white shadow-sm">
           <div className="aspect-[4/3] bg-stone-200" />

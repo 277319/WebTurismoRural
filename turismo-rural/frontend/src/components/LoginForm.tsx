@@ -53,7 +53,7 @@ export default function LoginForm({ onIrARegistro }: { onIrARegistro: () => void
   return (
     <form onSubmit={onSubmit} noValidate className="w-full max-w-md rounded-2xl bg-white p-8 shadow-lg">
       <h2 className="text-2xl font-bold text-campo-700">Iniciar sesión</h2>
-      <p className="mt-1 text-sm text-stone-500">Accede con tu correo o tu número de teléfono.</p>
+      <p className="mt-1 text-sm text-stone-600">Accede con tu correo o tu número de teléfono.</p>
 
       <div className="mt-6 space-y-4">
         <CampoTexto
@@ -94,12 +94,12 @@ export default function LoginForm({ onIrARegistro }: { onIrARegistro: () => void
       <button
         type="submit"
         disabled={enviando}
-        className="mt-6 w-full rounded-lg bg-campo-600 py-3 font-medium text-white shadow transition hover:bg-campo-700 disabled:cursor-not-allowed disabled:opacity-60"
+        className="mt-6 w-full rounded-lg bg-campo-600 py-3 font-semibold text-white shadow transition hover:bg-campo-700 disabled:cursor-not-allowed disabled:opacity-60"
       >
         {enviando ? 'Entrando…' : 'Iniciar sesión'}
       </button>
 
-      <p className="mt-4 text-center text-sm text-stone-500">
+      <p className="mt-4 text-center text-sm text-stone-600">
         ¿No tienes cuenta?{' '}
         <button type="button" onClick={onIrARegistro} className="font-medium text-campo-600 hover:underline">
           Regístrate

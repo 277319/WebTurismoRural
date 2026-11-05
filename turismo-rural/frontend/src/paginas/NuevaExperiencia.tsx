@@ -18,19 +18,19 @@ export default function NuevaExperiencia() {
         <ArrowLeft className="size-4" aria-hidden />
         Mis experiencias
       </Link>
-      <h1 className="mb-6 text-2xl font-bold text-campo-700">Publicar experiencia</h1>
+      <h1 className="mb-6 text-3xl font-bold text-campo-700">Publicar experiencia</h1>
 
       {error && !cargando ? (
         <ErrorCarga error={error} titulo="No pudimos cargar tus emprendimientos" onReintentar={recargar} />
       ) : !emprendimientos ? (
-        <p className="text-stone-500">Cargando…</p>
+        <p className="text-stone-600">Cargando…</p>
       ) : emprendimientos.length === 0 ? (
         <div className="rounded-2xl bg-white p-8 text-center shadow-sm">
           <p className="font-medium text-stone-700">Primero necesitas un emprendimiento</p>
-          <p className="mt-1 text-sm text-stone-500">Cada experiencia se publica dentro de uno de tus emprendimientos.</p>
+          <p className="mt-1 text-sm text-stone-600">Cada experiencia se publica dentro de uno de tus emprendimientos.</p>
           <Link
             to="/mis-emprendimientos"
-            className="mt-4 inline-block rounded-lg bg-campo-600 px-4 py-2 text-sm font-medium text-white shadow transition hover:bg-campo-700"
+            className="mt-4 inline-block rounded-lg bg-campo-600 px-5 py-2.5 text-base font-semibold text-white shadow transition hover:bg-campo-700"
           >
             Crear emprendimiento
           </Link>
@@ -65,7 +65,7 @@ function FormularioExperiencia({ emprendimientos }: { emprendimientos: Emprendim
           <span className="font-medium">{publicada.titulo}</span>{' '}
           {publicada.estado === 'activo' ? 'ya aparece en el catálogo.' : 'quedó guardada como pausada.'}
         </p>
-        <p className="mt-4 text-sm text-stone-500">Te llevamos a Mis experiencias…</p>
+        <p className="mt-4 text-sm text-stone-600">Te llevamos a Mis experiencias…</p>
         <Link
           to="/mis-experiencias"
           state={{ nueva: publicada.id }}

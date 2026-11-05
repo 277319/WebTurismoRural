@@ -9,12 +9,24 @@ type Props = {
   children: ReactNode
   /** Si se indica, hay que escribir este texto para habilitar el botón (para borrados con mucho alcance) */
   textoConfirmacion?: string
+  /** Texto del botón (por defecto "Eliminar definitivamente") y mientras se ejecuta */
+  accion?: string
+  accionEnCurso?: string
   onEliminar: () => Promise<void>
   onCerrar: () => void
 }
 
-/** Confirmación de un borrado definitivo, en un <dialog> nativo (cierra con Escape y retiene el foco). */
-export default function DialogoEliminar({ abierto, titulo, children, textoConfirmacion, onEliminar, onCerrar }: Props) {
+/** Confirmación de una acción destructiva (borrar, cancelar…), en un <dialog> nativo (cierra con Escape y retiene el foco). */
+export default function DialogoEliminar({
+  abierto,
+  titulo,
+  children,
+  textoConfirmacion,
+  accion = 'Eliminar definitivamente',
+  accionEnCurso = 'Eliminando…',
+  onEliminar,
+  onCerrar,
+}: Props) {
   const dialogo = useRef<HTMLDialogElement>(null)
   const [escrito, setEscrito] = useState('')
   const [eliminando, setEliminando] = useState(false)
@@ -70,10 +82,10 @@ export default function DialogoEliminar({ abierto, titulo, children, textoConfir
             <TriangleAlert className="size-5" aria-hidden />
           </span>
           <div className="min-w-0">
-            <h2 id="dialogo-eliminar-titulo" className="text-lg font-semibold text-stone-800">
+            <h2 id="dialogo-eliminar-titulo" className="text-xl font-bold text-stone-800">
               {titulo}
             </h2>
-            <div className="mt-1 space-y-2 text-sm text-stone-600">{children}</div>
+            <div className="mt-2 space-y-2 text-base text-stone-700">{children}</div>
           </div>
         </div>
 
@@ -86,33 +98,33 @@ export default function DialogoEliminar({ abierto, titulo, children, textoConfir
               onChange={(e) => setEscrito(e.target.value)}
               disabled={eliminando}
               autoComplete="off"
-              className="mt-1 w-full rounded-lg border border-stone-300 px-3 py-2 focus:border-red-500 focus:ring-2 focus:ring-red-200 focus:outline-none"
+              className="mt-1 w-full rounded-lg border-2 border-stone-500 px-3 py-2 focus:border-red-500 focus:ring-2 focus:ring-red-200 focus:outline-none"
             />
           </label>
         )}
 
         {error && (
           <p role="alert" className="mt-3 text-sm text-red-600">
-            No se pudo eliminar. {error}
+            No se pudo completar. {error}
           </p>
         )}
 
-        <div className="mt-5 flex justify-end gap-2">
+        <div className="mt-6 flex flex-wrap justify-end gap-3">
           <button
             type="button"
             onClick={onCerrar}
             disabled={eliminando}
-            className="rounded-lg border border-stone-300 px-4 py-2 text-sm font-medium text-stone-700 transition hover:bg-stone-50 disabled:opacity-60"
+            className="rounded-lg border-2 border-stone-500 px-5 py-2.5 text-base font-semibold text-stone-700 transition hover:bg-stone-50 disabled:opacity-60"
           >
-            Cancelar
+            No, volver
           </button>
           <button
             type="submit"
             disabled={!confirmado || eliminando}
-            className="inline-flex items-center gap-1.5 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white shadow transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-red-600 px-5 py-2.5 text-base font-semibold text-white shadow transition hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {eliminando ? <LoaderCircle className="size-4 animate-spin" aria-hidden /> : <Trash2 className="size-4" aria-hidden />}
-            {eliminando ? 'Eliminando…' : 'Eliminar definitivamente'}
+            {eliminando ? accionEnCurso : accion}
           </button>
         </div>
       </form>

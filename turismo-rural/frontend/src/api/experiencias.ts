@@ -11,6 +11,7 @@ export type TipoExperiencia =
   | 'acuatica'
   | 'avistamiento'
   | 'cultural'
+  | 'hospedaje'
 
 export type EstadoExperiencia = 'activo' | 'pausado'
 
@@ -45,6 +46,12 @@ export type Experiencia = DatosExperiencia & {
   fotos: FotoExperiencia[]
   fecha_creacion: string
   fecha_actualizacion: string
+}
+
+/** GET /experiencias/mias: incluye lo que el anfitrión tiene que atender */
+export type ExperienciaPropia = Experiencia & {
+  /** Reservas de hoy en adelante que esperan su confirmación */
+  reservas_pendientes: number
 }
 
 /** GET /experiencias/{id}: incluye los datos públicos del emprendimiento anfitrión */
@@ -103,7 +110,7 @@ export async function obtenerExperiencia(id: number): Promise<ExperienciaDetalle
   return json(await apiFetch(`/experiencias/${id}`))
 }
 
-export async function misExperiencias(): Promise<Experiencia[]> {
+export async function misExperiencias(): Promise<ExperienciaPropia[]> {
   return json(await apiFetch('/experiencias/mias'))
 }
 
@@ -125,6 +132,33 @@ export async function cambiarEstadoExperiencia(id: number, estado: EstadoExperie
 export async function eliminarExperiencia(id: number): Promise<void> {
   const res = await apiFetch(`/experiencias/${id}`, { method: 'DELETE' })
   if (!res.ok) throw await errorDesdeRespuesta(res)
+}
+
+/** Mismo límite que el backend (MAX_DIAS_DISPONIBILIDAD): días hacia adelante que se pueden abrir */
+export const MAX_DIAS_DISPONIBILIDAD = 365
+
+export type DiaDisponible = {
+  /** 'YYYY-MM-DD' */
+  fecha: string
+  /** Cupos libres: ya descontadas las personas con reserva activa. 0 = completo */
+  cupos: number
+  /** Personas con reserva pendiente o confirmada ese día */
+  reservados: number
+}
+
+/** Días disponibles desde hoy (pública, con las mismas reglas de visibilidad que el detalle). */
+export async function obtenerDisponibilidad(experienciaId: number): Promise<DiaDisponible[]> {
+  return json(await apiFetch(`/experiencias/${experienciaId}/disponibilidad`))
+}
+
+/** Reemplaza los días disponibles desde hoy: los que no se envían quedan cerrados. */
+export async function guardarDisponibilidad(
+  experienciaId: number,
+  dias: Pick<DiaDisponible, 'fecha' | 'cupos'>[],
+): Promise<DiaDisponible[]> {
+  return json(
+    await apiFetch(`/experiencias/${experienciaId}/disponibilidad`, { method: 'PUT', body: JSON.stringify({ dias }) }),
+  )
 }
 
 /** Agrega una foto al final de la galería; el backend la redimensiona y comprime. */

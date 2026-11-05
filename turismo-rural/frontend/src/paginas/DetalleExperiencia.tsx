@@ -1,14 +1,15 @@
-import { ArrowLeft, ExternalLink, Images, MapPin, Navigation, Pause, Pencil, Phone, Store, Users } from 'lucide-react'
+import { ArrowLeft, CalendarDays, ExternalLink, Images, MapPin, Navigation, Pause, Pencil, Phone, Store, Users } from 'lucide-react'
 import { lazy, Suspense } from 'react'
 import { Link, useLocation, useNavigate, useParams } from 'react-router'
 import { ErrorApi, urlArchivo } from '../api/cliente'
 import { formatearPrecio, obtenerExperiencia, type ExperienciaDetalle } from '../api/experiencias'
 import { useAuth } from '../auth/contexto'
 import ErrorCarga from '../components/ErrorCarga'
+import FormularioReserva from '../components/FormularioReserva'
 import GaleriaFotos from '../components/GaleriaFotos'
 import { useCarga } from '../hooks/useCarga'
 import { REDES_INFO } from '../redes'
-import { tipoExperiencia } from '../tiposExperiencia'
+import { esHospedaje, tipoExperiencia, unidadPrecio } from '../tiposExperiencia'
 import { CAMPOS_REDES, enlaceRed } from '../validacion'
 
 // Leaflet pesa ~150 kB: se descarga solo al abrir una experiencia que tenga mapa
@@ -54,7 +55,7 @@ export default function DetalleExperiencia() {
           )}
         </>
       ) : !datos ? (
-        <p className="text-stone-500">Cargando…</p>
+        <p className="text-stone-600">Cargando…</p>
       ) : (
         <Detalle experiencia={datos} esDueno={usuario?.id === datos.emprendimiento.usuario_id} />
       )}
@@ -86,14 +87,14 @@ function Detalle({ experiencia: exp, esDueno }: { experiencia: ExperienciaDetall
           <div className="flex gap-2">
             <Link
               to={`/experiencias/${exp.id}/editar`}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-stone-300 px-3 py-1.5 text-sm font-medium text-stone-700 transition hover:bg-stone-50"
+              className="inline-flex items-center gap-1.5 rounded-lg border-2 border-stone-500 px-4 py-2.5 text-base font-semibold text-stone-700 transition hover:bg-stone-50"
             >
               <Pencil className="size-4" aria-hidden />
               Editar
             </Link>
             <Link
               to={`/experiencias/${exp.id}/galeria`}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-stone-300 px-3 py-1.5 text-sm font-medium text-stone-700 transition hover:bg-stone-50"
+              className="inline-flex items-center gap-1.5 rounded-lg border-2 border-stone-500 px-4 py-2.5 text-base font-semibold text-stone-700 transition hover:bg-stone-50"
             >
               <Images className="size-4" aria-hidden />
               Galería
@@ -108,7 +109,7 @@ function Detalle({ experiencia: exp, esDueno }: { experiencia: ExperienciaDetall
             <Icono className="size-4" aria-hidden />
             {nombreTipo}
           </span>
-          <span className="inline-flex items-center gap-1 text-stone-500">
+          <span className="inline-flex items-center gap-1 text-stone-600">
             <MapPin className="size-4" aria-hidden />
             {exp.localidad}
           </span>
@@ -116,7 +117,7 @@ function Detalle({ experiencia: exp, esDueno }: { experiencia: ExperienciaDetall
         <h1 className="text-3xl font-bold text-stone-800 sm:text-4xl">{exp.titulo}</h1>
       </header>
 
-      <div className="grid items-start gap-8 lg:grid-cols-[minmax(0,1fr)_22rem]">
+      <div className="grid items-start gap-8 xl:grid-cols-[minmax(0,1fr)_22rem]">
         <div className="space-y-10">
           <GaleriaFotos fotos={exp.fotos} titulo={exp.titulo} IconoVacio={Icono} />
 
@@ -164,8 +165,8 @@ function Detalle({ experiencia: exp, esDueno }: { experiencia: ExperienciaDetall
           </section>
         </div>
 
-        <aside className="space-y-4 lg:sticky lg:top-6">
-          <Reserva experiencia={exp} />
+        <aside className="space-y-4 xl:sticky xl:top-6">
+          <Reserva experiencia={exp} esDueno={esDueno} />
           <Anfitrion anfitrion={anfitrion} />
         </aside>
       </div>
@@ -173,7 +174,7 @@ function Detalle({ experiencia: exp, esDueno }: { experiencia: ExperienciaDetall
   )
 }
 
-function Reserva({ experiencia: exp }: { experiencia: ExperienciaDetalle }) {
+function Reserva({ experiencia: exp, esDueno }: { experiencia: ExperienciaDetalle; esDueno: boolean }) {
   const { Icono, nombre: nombreTipo } = tipoExperiencia(exp.tipo)
   const { redes, telefono_contacto } = exp.emprendimiento
   const IconoWhatsapp = REDES_INFO.whatsapp.Icono
@@ -183,42 +184,63 @@ function Reserva({ experiencia: exp }: { experiencia: ExperienciaDetalle }) {
     <div className="rounded-2xl bg-white p-5 shadow-lg">
       <p className="text-stone-800">
         <span className="text-3xl font-bold text-campo-700">{formatearPrecio(exp.precio_por_persona)}</span>
-        {exp.precio_por_persona > 0 && <span className="text-stone-500"> / persona</span>}
+        {exp.precio_por_persona > 0 && <span className="text-stone-600"> {unidadPrecio(exp.tipo)}</span>}
       </p>
       <ul className="mt-4 space-y-2 text-sm text-stone-700">
         <li className="flex items-center gap-2">
-          <Users className="size-4 shrink-0 text-stone-400" aria-hidden />
-          Hasta {exp.capacidad_maxima} {exp.capacidad_maxima === 1 ? 'persona' : 'personas'} por salida
+          <Users className="size-4 shrink-0 text-stone-500" aria-hidden />
+          Hasta {exp.capacidad_maxima} {exp.capacidad_maxima === 1 ? 'persona' : 'personas'} por{' '}
+          {esHospedaje(exp.tipo) ? 'noche' : 'salida'}
         </li>
         <li className="flex items-center gap-2">
-          <Icono className="size-4 shrink-0 text-stone-400" aria-hidden />
+          <Icono className="size-4 shrink-0 text-stone-500" aria-hidden />
           {nombreTipo}
         </li>
         <li className="flex items-center gap-2">
-          <MapPin className="size-4 shrink-0 text-stone-400" aria-hidden />
+          <MapPin className="size-4 shrink-0 text-stone-500" aria-hidden />
           {exp.localidad}
         </li>
       </ul>
-      {redes.whatsapp ? (
-        <a
-          href={`${enlaceRed('whatsapp', redes.whatsapp)}?text=${encodeURIComponent(mensaje)}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-5 flex w-full items-center justify-center gap-2 rounded-lg bg-campo-600 py-3 font-medium text-white shadow transition hover:bg-campo-700"
-        >
-          <IconoWhatsapp className="size-5" aria-hidden />
-          Consultar por WhatsApp
-        </a>
-      ) : (
-        <a
-          href={`tel:${telefono_contacto}`}
-          className="mt-5 flex w-full items-center justify-center gap-2 rounded-lg bg-campo-600 py-3 font-medium text-white shadow transition hover:bg-campo-700"
-        >
-          <Phone className="size-5" aria-hidden />
-          Llamar al anfitrión
-        </a>
-      )}
-      <p className="mt-2 text-center text-xs text-stone-500">Coordina la fecha y la reserva directamente con el anfitrión.</p>
+
+      <div className="mt-5 border-t border-stone-200 pt-5">
+        {esDueno ? (
+          <p className="text-sm text-stone-600">
+            Aquí los visitantes reservan las fechas que abras.{' '}
+            <Link
+              to={`/experiencias/${exp.id}/disponibilidad`}
+              className="inline-flex items-center gap-1 font-medium text-campo-600 hover:underline"
+            >
+              <CalendarDays className="size-4" aria-hidden />
+              Gestionar disponibilidad
+            </Link>
+          </p>
+        ) : (
+          <FormularioReserva experiencia={exp} />
+        )}
+      </div>
+
+      <div className="mt-4">
+        <p className="mb-2 text-center text-sm text-stone-600">¿Tienes dudas antes de reservar?</p>
+        {redes.whatsapp ? (
+          <a
+            href={`${enlaceRed('whatsapp', redes.whatsapp)}?text=${encodeURIComponent(mensaje)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-stone-500 py-2 text-base font-semibold text-stone-700 transition hover:bg-stone-50"
+          >
+            <IconoWhatsapp className="size-4" aria-hidden />
+            Consultar por WhatsApp
+          </a>
+        ) : (
+          <a
+            href={`tel:${telefono_contacto}`}
+            className="flex w-full items-center justify-center gap-2 rounded-lg border-2 border-stone-500 py-2 text-base font-semibold text-stone-700 transition hover:bg-stone-50"
+          >
+            <Phone className="size-4" aria-hidden />
+            Llamar al anfitrión
+          </a>
+        )}
+      </div>
     </div>
   )
 }
@@ -229,10 +251,10 @@ function Anfitrion({ anfitrion }: { anfitrion: ExperienciaDetalle['emprendimient
 
   return (
     <div className="rounded-2xl bg-white p-5 shadow-sm">
-      <h2 className="mb-3 text-sm font-semibold tracking-wide text-stone-500 uppercase">Tu anfitrión</h2>
+      <h2 className="mb-3 text-sm font-semibold tracking-wide text-stone-600 uppercase">Tu anfitrión</h2>
       <div className="flex items-center gap-3">
         {foto ? (
-          <img src={foto} alt="" className="size-14 shrink-0 rounded-full object-cover" />
+          <img src={foto} alt="" loading="lazy" decoding="async" className="size-14 shrink-0 rounded-full object-cover" />
         ) : (
           <span className="flex size-14 shrink-0 items-center justify-center rounded-full bg-campo-100 text-campo-600">
             <Store className="size-6" aria-hidden />
@@ -240,8 +262,8 @@ function Anfitrion({ anfitrion }: { anfitrion: ExperienciaDetalle['emprendimient
         )}
         <div className="min-w-0">
           <p className="font-semibold break-words text-stone-800">{anfitrion.nombre}</p>
-          <p className="flex items-center gap-1 text-sm text-stone-500">
-            <MapPin className="size-3.5 shrink-0" aria-hidden />
+          <p className="flex items-center gap-1 text-sm text-stone-600">
+            <MapPin className="size-4 shrink-0" aria-hidden />
             {anfitrion.localidad}
           </p>
         </div>
@@ -252,7 +274,7 @@ function Anfitrion({ anfitrion }: { anfitrion: ExperienciaDetalle['emprendimient
       )}
 
       <p className="mt-3 flex items-center gap-2 text-sm text-stone-700">
-        <Phone className="size-4 shrink-0 text-stone-400" aria-hidden />
+        <Phone className="size-4 shrink-0 text-stone-500" aria-hidden />
         <a href={`tel:${anfitrion.telefono_contacto}`} className="hover:underline">
           {anfitrion.telefono_contacto}
         </a>
