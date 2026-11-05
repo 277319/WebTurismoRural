@@ -7,7 +7,8 @@ import { tipoExperiencia } from '../tiposExperiencia'
 
 export default function TarjetaExperiencia({ experiencia }: { experiencia: Experiencia }) {
   const { Icono, nombre: nombreTipo } = tipoExperiencia(experiencia.tipo)
-  const foto = urlArchivo(experiencia.emprendimiento.foto_url)
+  // La foto principal de la galería; si no hay, la del emprendimiento
+  const foto = urlArchivo(experiencia.fotos[0]?.url ?? experiencia.emprendimiento.foto_url)
   const [fotoFallo, setFotoFallo] = useState(false)
 
   return (
@@ -16,7 +17,7 @@ export default function TarjetaExperiencia({ experiencia }: { experiencia: Exper
         {foto && !fotoFallo ? (
           <img
             src={foto}
-            alt={`Foto de ${experiencia.emprendimiento.nombre}`}
+            alt={experiencia.fotos.length > 0 ? experiencia.titulo : `Foto de ${experiencia.emprendimiento.nombre}`}
             loading="lazy"
             onError={() => setFotoFallo(true)}
             className="size-full object-cover"

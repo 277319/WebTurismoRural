@@ -12,6 +12,8 @@ class Settings(BaseSettings):
     CORS_ORIGINS: list[str] = ["http://localhost:5173"]
     UPLOADS_DIR: str = "uploads"
     MAX_FOTO_MB: int = 5
+    # Las fotos de la galería se comprimen al subirlas, así que se acepta un original más pesado
+    MAX_FOTO_EXPERIENCIA_MB: int = 10
 
 
 settings = Settings()

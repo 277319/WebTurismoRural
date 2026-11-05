@@ -1,7 +1,14 @@
 import { useEffect, useRef, useState } from 'react'
 
 export const MAX_IMAGEN_MB = 5
-const TIPOS_IMAGEN = ['image/jpeg', 'image/png', 'image/webp']
+export const TIPOS_IMAGEN = ['image/jpeg', 'image/png', 'image/webp']
+
+/** Valida tipo y tamaño con las mismas reglas que el backend. Devuelve el mensaje de error o null. */
+export function errorImagen(archivo: File, maxMb = MAX_IMAGEN_MB): string | null {
+  if (!TIPOS_IMAGEN.includes(archivo.type)) return 'La foto debe ser JPG, PNG o WebP.'
+  if (archivo.size > maxMb * 1024 * 1024) return `La foto no puede superar los ${maxMb} MB.`
+  return null
+}
 
 /**
  * Imagen elegida en un <input type="file"> pero aún no subida, con una URL temporal para la
@@ -35,15 +42,9 @@ export function useImagenPendiente() {
       const archivo = input.files?.[0]
       input.value = ''
       if (!archivo) return
-      if (!TIPOS_IMAGEN.includes(archivo.type)) {
-        setError('La foto debe ser JPG, PNG o WebP.')
-        return
-      }
-      if (archivo.size > MAX_IMAGEN_MB * 1024 * 1024) {
-        setError(`La foto no puede superar los ${MAX_IMAGEN_MB} MB.`)
-        return
-      }
-      setError(null)
+      const invalida = errorImagen(archivo)
+      setError(invalida)
+      if (invalida) return
       cambiar(archivo)
     },
     descartar() {

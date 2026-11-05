@@ -5,6 +5,7 @@ from pydantic import BaseModel, ConfigDict, Field, computed_field, field_validat
 
 from app.core.archivos import url_foto_emprendimiento
 from app.models.experiencia import EstadoExperiencia, TipoExperiencia
+from app.models.foto_experiencia import MAX_FOTOS_EXPERIENCIA
 from app.schemas.validadores import Texto100, Texto150
 
 
@@ -48,6 +49,20 @@ class EmprendimientoResumen(BaseModel):
         return url_foto_emprendimiento(self.foto_perfil)
 
 
+class FotoExperienciaPublica(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    url: str
+    orden: int
+
+
+class OrdenFotos(BaseModel):
+    """Ids de todas las fotos de la galería, en el nuevo orden."""
+
+    ids: list[int] = Field(max_length=MAX_FOTOS_EXPERIENCIA)
+
+
 class ExperienciaPublica(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -63,6 +78,7 @@ class ExperienciaPublica(BaseModel):
     latitud: float | None
     longitud: float | None
     estado: EstadoExperiencia
+    fotos: list[FotoExperienciaPublica]
     fecha_creacion: datetime
     fecha_actualizacion: datetime
 
