@@ -19,6 +19,8 @@ export type Usuario = {
 }
 
 export type DatosRegistro = {
+  /** Obligatorio para los visitantes */
+  nombre?: string
   correo?: string
   telefono?: string
   contrasena: string

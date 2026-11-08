@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 
 from app.core.archivos import (
     borrar_foto_emprendimiento,
+    borrar_foto_experiencia,
     guardar_foto_emprendimiento,
     leer_imagen,
     url_foto_emprendimiento,
@@ -30,7 +31,7 @@ def obtener_propio(emprendimiento_id: int, usuario: Usuario, db: Session) -> Emp
     if emprendimiento is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail="Emprendimiento no encontrado")
     if emprendimiento.usuario_id != usuario.id:
-        raise HTTPException(status.HTTP_403_FORBIDDEN, detail="Solo el dueño puede editar este emprendimiento")
+        raise HTTPException(status.HTTP_403_FORBIDDEN, detail="Solo el dueño puede modificar este emprendimiento")
     return emprendimiento
 
 
@@ -84,6 +85,25 @@ def editar_emprendimiento(
     db.commit()
     db.refresh(emprendimiento)
     return emprendimiento
+
+
+@router.delete("/{emprendimiento_id}", status_code=status.HTTP_204_NO_CONTENT)
+def eliminar_emprendimiento(
+    emprendimiento_id: int,
+    usuario: Usuario = Depends(solo_anfitrion),
+    db: Session = Depends(get_db),
+) -> None:
+    """Borra el emprendimiento con todas sus experiencias y fotos (filas y archivos). No se puede deshacer."""
+    emprendimiento = obtener_propio(emprendimiento_id, usuario, db)
+    fotos_emprendimiento = [emprendimiento.foto_perfil, emprendimiento.portada_url]
+    fotos_experiencias = [f.url for e in emprendimiento.experiencias for f in e.fotos]
+    db.delete(emprendimiento)
+    db.commit()
+    # Los archivos se borran después del commit: si este falla, las fotos siguen intactas
+    for nombre in fotos_emprendimiento:
+        borrar_foto_emprendimiento(nombre)
+    for url in fotos_experiencias:
+        borrar_foto_experiencia(url)
 
 
 @router.put("/{emprendimiento_id}/foto", response_model=EmprendimientoPublico)

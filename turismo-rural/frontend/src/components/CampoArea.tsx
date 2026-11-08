@@ -17,10 +17,10 @@ export default function CampoArea({ id, label, value, maxLength, error, placehol
   return (
     <div>
       <div className="mb-1 flex items-baseline justify-between gap-2">
-        <label htmlFor={id} className="text-sm font-medium text-stone-700">
+        <label htmlFor={id} className="text-base font-semibold text-stone-800">
           {label}
         </label>
-        <span className={`text-xs ${excedido ? 'font-medium text-red-600' : 'text-stone-400'}`} aria-live="polite">
+        <span className={`text-sm ${excedido ? 'font-medium text-red-600' : 'text-stone-500'}`} aria-live="polite">
           {value.length}/{maxLength}
         </span>
       </div>
@@ -34,14 +34,14 @@ export default function CampoArea({ id, label, value, maxLength, error, placehol
         onBlur={onBlur}
         aria-invalid={!!error}
         aria-describedby={error ? `${id}-error` : undefined}
-        className={`w-full resize-y rounded-lg border px-3 py-2 outline-none transition focus:ring-2 ${
+        className={`w-full resize-y rounded-lg border-2 bg-white px-3 py-3 text-base outline-none transition focus:ring-2 ${
           error
-            ? 'border-red-400 focus:border-red-500 focus:ring-red-200'
-            : 'border-stone-300 focus:border-campo-500 focus:ring-campo-100'
+            ? 'border-red-600 focus:border-red-600 focus:ring-red-200'
+            : 'border-stone-500 focus:border-campo-500 focus:ring-campo-100'
         }`}
       />
       {error && (
-        <p id={`${id}-error`} className="mt-1 text-sm text-red-600">
+        <p id={`${id}-error`} className="mt-1 text-base font-medium text-red-700">
           {error}
         </p>
       )}

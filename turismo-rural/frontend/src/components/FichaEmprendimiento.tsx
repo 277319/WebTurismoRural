@@ -11,7 +11,7 @@ type Props = {
 }
 
 function Vacio({ children }: { children: string }) {
-  return <span className="text-stone-400 italic">{children}</span>
+  return <span className="text-stone-500 italic">{children}</span>
 }
 
 function Seccion({ titulo, children }: { titulo: string; children: ReactNode }) {
@@ -51,7 +51,7 @@ export default function FichaEmprendimiento({ datos: d, previa = false }: Props)
             <Titulo className="text-2xl font-bold break-words text-stone-800">
               {d.nombre.trim() || <Vacio>Nombre del emprendimiento</Vacio>}
             </Titulo>
-            <p className="mt-1 flex items-center gap-1 text-sm text-stone-500">
+            <p className="mt-1 flex items-center gap-1 text-sm text-stone-600">
               <MapPin className="size-4 shrink-0" aria-hidden />
               {d.localidad.trim() || <Vacio>Localidad</Vacio>}
             </p>
@@ -109,7 +109,7 @@ export default function FichaEmprendimiento({ datos: d, previa = false }: Props)
             <h3 className="mb-2 text-sm font-semibold tracking-wide text-(--marca-tinta) uppercase">Contacto</h3>
             <ul className="space-y-1 text-sm text-stone-700">
               <li className="flex items-center gap-2">
-                <Phone className="size-4 shrink-0 text-stone-400" aria-hidden />
+                <Phone className="size-4 shrink-0 text-stone-500" aria-hidden />
                 {d.telefono.trim() ? (
                   <a href={`tel:${d.telefono}`} className="hover:underline">
                     {d.telefono}
@@ -120,7 +120,7 @@ export default function FichaEmprendimiento({ datos: d, previa = false }: Props)
               </li>
               {d.direccion.trim() && (
                 <li className="flex items-center gap-2">
-                  <MapPin className="size-4 shrink-0 text-stone-400" aria-hidden />
+                  <MapPin className="size-4 shrink-0 text-stone-500" aria-hidden />
                   <span className="break-words">{d.direccion}</span>
                 </li>
               )}

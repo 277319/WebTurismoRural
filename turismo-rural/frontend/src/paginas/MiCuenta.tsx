@@ -3,7 +3,7 @@ import { NOMBRE_ROL, type Usuario } from '../api/auth'
 import { ErrorApi } from '../api/cliente'
 import { actualizarMiCuenta } from '../api/usuarios'
 import { useAuth } from '../auth/contexto'
-import { CORREO_RE, limpiarTelefono, telefonoValido } from '../validacion'
+import { CORREO_RE, errorNombre, limpiarTelefono, normalizarNombre, telefonoValido } from '../validacion'
 import CampoTexto from '../components/CampoTexto'
 
 type Campo = 'nombre' | 'correo' | 'telefono' | 'contrasena_actual'
@@ -17,18 +17,20 @@ function valoresDe(usuario: Usuario): Valores {
 /** Datos tal como se enviarán al backend (vacío -> null) */
 function normalizar(v: Valores) {
   return {
-    nombre: v.nombre.split(/\s+/).filter(Boolean).join(' ') || null,
+    nombre: normalizarNombre(v.nombre) || null,
     correo: v.correo.trim().toLowerCase() || null,
     telefono: limpiarTelefono(v.telefono) || null,
   }
 }
 
-function validar(v: Valores, pideContrasena: boolean, contrasenaActual: string): Errores {
+function validar(v: Valores, esVisitante: boolean, pideContrasena: boolean, contrasenaActual: string): Errores {
   const errores: Errores = {}
   const correo = v.correo.trim()
   const telefono = v.telefono.trim()
 
-  if (v.nombre.trim().length > 100) errores.nombre = 'Máximo 100 caracteres'
+  // Los visitantes no pueden quedar sin nombre: lo necesitan para reservar
+  const errorDelNombre = errorNombre(v.nombre, esVisitante)
+  if (errorDelNombre) errores.nombre = errorDelNombre
 
   if (correo && !CORREO_RE.test(correo)) errores.correo = 'El correo no es válido'
   if (telefono && !telefonoValido(telefono)) errores.telefono = 'El teléfono debe tener entre 8 y 15 dígitos'
@@ -60,7 +62,7 @@ export default function MiCuenta() {
   const cambiaAcceso = datos.correo !== actual.correo || datos.telefono !== actual.telefono
   const hayCambios = cambiaAcceso || datos.nombre !== actual.nombre
 
-  const erroresLocales = validar(valores, cambiaAcceso, contrasenaActual)
+  const erroresLocales = validar(valores, actual.rol === 'visitante', cambiaAcceso, contrasenaActual)
   const errorDe = (campo: Campo) =>
     erroresServidor[campo] ?? (tocados[campo] ? erroresLocales[campo] : undefined)
 
@@ -108,15 +110,20 @@ export default function MiCuenta() {
   return (
     <section className="w-full max-w-2xl">
       <h2 className="mb-4 text-xl font-bold text-campo-700">Mi cuenta</h2>
+      {!actual.nombre && (
+        <p className="mb-4 rounded-lg bg-amber-50 px-3 py-2.5 text-sm text-amber-800">
+          Agrega tu nombre para poder reservar experiencias: el anfitrión lo verá en tus reservas.
+        </p>
+      )}
 
       <form onSubmit={onSubmit} noValidate className="rounded-2xl bg-white p-6 shadow-lg sm:p-8">
         <dl className="mb-6 grid grid-cols-2 gap-4 rounded-lg bg-stone-50 p-4 text-sm">
           <div>
-            <dt className="text-stone-500">Rol</dt>
+            <dt className="text-stone-600">Rol</dt>
             <dd className="font-medium">{NOMBRE_ROL[actual.rol]}</dd>
           </div>
           <div>
-            <dt className="text-stone-500">Miembro desde</dt>
+            <dt className="text-stone-600">Miembro desde</dt>
             <dd className="font-medium">{new Date(actual.fecha_creacion).toLocaleDateString('es')}</dd>
           </div>
         </dl>
@@ -189,7 +196,7 @@ export default function MiCuenta() {
         <button
           type="submit"
           disabled={enviando || !hayCambios}
-          className="mt-6 w-full rounded-lg bg-campo-600 py-3 font-medium text-white shadow transition hover:bg-campo-700 disabled:cursor-not-allowed disabled:opacity-60"
+          className="mt-6 w-full rounded-lg bg-campo-600 py-3 font-semibold text-white shadow transition hover:bg-campo-700 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {enviando ? 'Guardando…' : 'Guardar cambios'}
         </button>

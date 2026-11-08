@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% import "_componentes.html" as c with context %}
+
+{% block resumen %}{{ emprendimiento }} registró tu pago de {{ total }}.{% endblock %}
+
+{% block contenido %}
+  {{ c.estado("Pagada", "#ffffff", "#47702e") }}
+  {{ c.titulo("Recibimos tu pago") }}
+  {{ c.saludo(visitante) }}
+  <p style="margin: 0 0 12px">
+    {{ emprendimiento }} registró el pago de <strong>{{ total }}</strong>{% if metodo_pago %} ({{ metodo_pago|lower }}){% endif %}
+    por tu reserva de <strong>{{ experiencia }}</strong>. Guarda este correo como comprobante.
+  </p>
+  {{ c.detalle() }}
+  {{ c.contacto_anfitrion() }}
+  {{ c.boton(url_mis_reservas, "Ver mis reservas") }}
+{% endblock %}

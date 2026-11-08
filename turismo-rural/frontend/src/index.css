@@ -10,3 +10,119 @@
 
   --font-sans: system-ui, "Segoe UI", Roboto, sans-serif;
 }
+
+/*
+ * Legibilidad: el sitio lo usan personas con poca práctica digital, en celulares y con mala conexión.
+ * - Base de 18px (en vez de 16): como Tailwind trabaja en rem, todo crece en proporción.
+ * - Fuentes del sistema (sin descargar tipografías) y foco bien visible para quien navega con teclado.
+ */
+@layer base {
+  html {
+    font-size: 112.5%;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    line-height: 1.6;
+  }
+
+  :focus-visible {
+    outline: 3px solid var(--color-campo-700);
+    outline-offset: 2px;
+  }
+
+  /* El gris por defecto del placeholder no llega al contraste mínimo */
+  ::placeholder {
+    color: var(--color-stone-500);
+    opacity: 1;
+  }
+
+  /* Elementos deshabilitados: atenuados, pero legibles */
+  button:disabled {
+    cursor: not-allowed;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+/* Calendario de disponibilidad (react-day-picker): dos clases para ganarle a su hoja de estilos */
+.rdp-root.calendario {
+  --rdp-accent-color: var(--color-campo-600);
+  --rdp-accent-background-color: var(--color-campo-100);
+  --rdp-today-color: var(--color-campo-700);
+  --rdp-day-width: 48px;
+  --rdp-day-height: 54px;
+  --rdp-day_button-width: 44px;
+  --rdp-day_button-height: 50px;
+  --rdp-day_button-border-radius: 0.5rem;
+  --rdp-months-gap: 2.5rem;
+  /* Más que el valor por defecto: los días sin cupos se distinguen además por el tachado */
+  --rdp-disabled-opacity: 0.45;
+}
+
+.rdp-root.calendario .rdp-day_button {
+  flex-direction: column;
+  gap: 2px;
+  line-height: 1;
+  transition: background-color 150ms;
+}
+
+.rdp-root.calendario .rdp-day_button:not(:disabled):hover {
+  background-color: var(--color-campo-50);
+}
+
+.rdp-root.calendario .rdp-selected {
+  font-size: inherit;
+}
+
+.rdp-root.calendario .rdp-selected .rdp-day_button,
+.rdp-root.calendario .rdp-selected .rdp-day_button:hover {
+  background-color: var(--color-campo-600);
+  border-color: var(--color-campo-600);
+  color: white;
+}
+
+.rdp-root.calendario .rdp-today:not(.rdp-selected) .rdp-day_button {
+  border-color: var(--color-campo-500);
+}
+
+/* Variante angosta para la columna lateral del detalle (7 días en ~20rem); 44px es el mínimo táctil */
+.rdp-root.calendario.compacto {
+  --rdp-day-width: 46px;
+  --rdp-day-height: 46px;
+  --rdp-day_button-width: 44px;
+  --rdp-day_button-height: 44px;
+}
+
+/* Días con cupos en el formulario de reserva: en negrita, para que se vean elegibles */
+.rdp-root.calendario.compacto .rdp-day:not(.rdp-disabled) .rdp-day_button {
+  font-weight: 700;
+}
+
+/* Días sin cupos en el formulario de reserva: tachados además de atenuados */
+.rdp-root.calendario.compacto .rdp-disabled:not(.rdp-outside) .rdp-day_button {
+  text-decoration: line-through;
+}
+
+/* Hospedaje: las noches después de la llegada y el día de salida (que puede no tener cupos) */
+.rdp-root.calendario .estadia .rdp-day_button {
+  background-color: var(--color-campo-100);
+  color: var(--color-campo-700);
+}
+
+.rdp-root.calendario .salida {
+  opacity: 1;
+}
+
+.rdp-root.calendario.compacto .salida .rdp-day_button {
+  border: 2px dashed var(--color-campo-500);
+  text-decoration: none;
+}

@@ -50,14 +50,14 @@ export default function EmprendimientoForm({ onCreado, onCancelar }: Props) {
         <button
           type="button"
           onClick={onCancelar}
-          className="flex-1 rounded-lg border border-stone-300 py-2.5 font-medium text-stone-700 transition hover:bg-stone-50"
+          className="flex-1 rounded-lg border-2 border-stone-500 py-2.5 font-semibold text-stone-700 transition hover:bg-stone-50"
         >
           Cancelar
         </button>
         <button
           type="submit"
           disabled={enviando}
-          className="flex-1 rounded-lg bg-campo-600 py-2.5 font-medium text-white shadow transition hover:bg-campo-700 disabled:cursor-not-allowed disabled:opacity-60"
+          className="flex-1 rounded-lg bg-campo-600 py-2.5 font-semibold text-white shadow transition hover:bg-campo-700 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {enviando ? 'Guardando…' : 'Publicar'}
         </button>

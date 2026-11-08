@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% import "_componentes.html" as c with context %}
+
+{% block resumen %}{{ emprendimiento }} no puede recibirte el {{ fecha }}. Puedes elegir otra fecha.{% endblock %}
+
+{% block contenido %}
+  {{ c.estado("Rechazada", "#b91c1c", "#fee2e2") }}
+  {{ c.titulo("Tu solicitud no fue aceptada") }}
+  {{ c.saludo(visitante) }}
+  <p style="margin: 0 0 12px">
+    Lo sentimos: {{ emprendimiento }} no puede recibirte el <strong>{{ fecha }}</strong> en
+    <strong>{{ experiencia }}</strong>.{% if not gratuita %} No tienes nada que pagar por esta reserva.{% endif %}
+  </p>
+  {{ c.detalle() }}
+  <p style="margin: 0 0 12px">Quizás haya cupos en otra fecha que te acomode.</p>
+  {{ c.boton(url_experiencia, "Ver otras fechas") }}
+{% endblock %}

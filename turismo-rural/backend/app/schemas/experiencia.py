@@ -1,9 +1,10 @@
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field, computed_field, field_validator, model_validator
 
 from app.core.archivos import url_foto_emprendimiento
+from app.models.disponibilidad_experiencia import MAX_DIAS_DISPONIBILIDAD
 from app.models.experiencia import EstadoExperiencia, TipoExperiencia
 from app.models.foto_experiencia import MAX_FOTOS_EXPERIENCIA
 from app.schemas.validadores import Texto100, Texto150
@@ -36,6 +37,19 @@ class ExperienciaCrear(BaseModel):
         return self
 
 
+class ExperienciaEditar(ExperienciaCrear):
+    """PUT /experiencias/{id}: reemplaza todos los datos. Las fotos se gestionan en /fotos."""
+
+    # Obligatorio: si tuviera valor por defecto, un PUT sin estado reactivaría una experiencia pausada
+    estado: EstadoExperiencia
+
+
+class ExperienciaEstado(BaseModel):
+    """PATCH /experiencias/{id}/estado: pausar o reanudar."""
+
+    estado: EstadoExperiencia
+
+
 class EmprendimientoResumen(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -63,6 +77,32 @@ class OrdenFotos(BaseModel):
     ids: list[int] = Field(max_length=MAX_FOTOS_EXPERIENCIA)
 
 
+class DiaDisponible(BaseModel):
+    fecha: date
+    # Cupos libres: ya descontadas las personas con reserva activa
+    cupos: int
+    reservados: int = 0
+
+
+class DiaDisponibleEditar(BaseModel):
+    fecha: date
+    # Cupos libres; 0 = día abierto pero completo. Que no supere la capacidad se comprueba en el router
+    cupos: int = Field(ge=0, le=1000)
+
+
+class DisponibilidadEditar(BaseModel):
+    """PUT /experiencias/{id}/disponibilidad: todos los días disponibles desde hoy. Los que falten se cierran."""
+
+    dias: list[DiaDisponibleEditar] = Field(max_length=MAX_DIAS_DISPONIBILIDAD + 1)
+
+    @field_validator("dias")
+    @classmethod
+    def sin_fechas_repetidas(cls, v: list[DiaDisponibleEditar]) -> list[DiaDisponibleEditar]:
+        if len({d.fecha for d in v}) != len(v):
+            raise ValueError("Hay fechas repetidas")
+        return sorted(v, key=lambda d: d.fecha)
+
+
 class ExperienciaPublica(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
@@ -81,6 +121,27 @@ class ExperienciaPublica(BaseModel):
     fotos: list[FotoExperienciaPublica]
     fecha_creacion: datetime
     fecha_actualizacion: datetime
+
+
+class ExperienciaPropia(ExperienciaPublica):
+    """GET /experiencias/mias: incluye lo que el anfitrión tiene que atender."""
+
+    # Reservas de hoy en adelante que esperan su confirmación
+    reservas_pendientes: int = 0
+
+
+class EmprendimientoAnfitrion(EmprendimientoResumen):
+    """Datos públicos del emprendimiento anfitrión, para el detalle de una experiencia."""
+
+    localidad: str
+    descripcion: str | None
+    telefono_contacto: str
+    redes: dict[str, str]
+    usuario_id: int
+
+
+class ExperienciaDetalle(ExperienciaPublica):
+    emprendimiento: EmprendimientoAnfitrion
 
 
 class PaginaExperiencias(BaseModel):

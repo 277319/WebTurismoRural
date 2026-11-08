@@ -11,7 +11,7 @@ type Props = {
 const COLOR_LIBRE_INICIAL = '#7a4b8c'
 
 const claseOpcion =
-  'relative flex cursor-pointer flex-col items-center gap-2 rounded-xl border-2 border-stone-200 p-3 text-sm font-medium text-stone-700 transition hover:border-stone-300 has-checked:border-campo-600 has-checked:bg-campo-50 has-focus-visible:ring-2 has-focus-visible:ring-campo-500 has-focus-visible:ring-offset-2'
+  'relative flex cursor-pointer flex-col items-center gap-2 rounded-xl border-2 border-stone-400 p-3 text-sm font-medium text-stone-700 transition hover:border-stone-500 has-checked:border-campo-600 has-checked:bg-campo-50 has-focus-visible:ring-2 has-focus-visible:ring-campo-500 has-focus-visible:ring-offset-2'
 
 function Muestra({ primario, secundario }: { primario: string; secundario: string }) {
   return (
@@ -25,7 +25,7 @@ function Muestra({ primario, secundario }: { primario: string; secundario: strin
 function MarcaElegida() {
   return (
     <span className="absolute top-1.5 right-1.5 hidden size-5 items-center justify-center rounded-full bg-campo-600 text-white group-has-checked:flex">
-      <Check className="size-3" aria-hidden />
+      <Check className="size-4" aria-hidden />
     </span>
   )
 }
@@ -71,8 +71,8 @@ export default function SelectorPaleta({ primario, secundario, onCambiar }: Prop
           {seleccion === 'libre' ? (
             <Muestra primario={primario} secundario={secundario} />
           ) : (
-            <span className="flex size-7 items-center justify-center rounded-full border-2 border-dashed border-stone-300 text-stone-400" aria-hidden>
-              <Paintbrush className="size-3.5" />
+            <span className="flex size-7 items-center justify-center rounded-full border-2 border-dashed border-stone-300 text-stone-500" aria-hidden>
+              <Paintbrush className="size-4" />
             </span>
           )}
           Color libre
@@ -90,9 +90,9 @@ export default function SelectorPaleta({ primario, secundario, onCambiar }: Prop
           />
           <div className="min-w-0 text-sm">
             <label htmlFor="color-libre" className="font-medium text-stone-700">
-              Tu color <span className="font-mono text-stone-500 uppercase">{colorLibre}</span>
+              Tu color <span className="font-mono text-stone-600 uppercase">{colorLibre}</span>
             </label>
-            <p className="text-xs text-stone-500">El color secundario se genera a partir de este.</p>
+            <p className="text-sm text-stone-600">El color secundario se genera a partir de este.</p>
           </div>
         </div>
       )}

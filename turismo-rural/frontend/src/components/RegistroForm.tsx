@@ -2,16 +2,27 @@ import { useState, type FormEvent } from 'react'
 import { registrar, type DatosRegistro, type Usuario } from '../api/auth'
 import { ErrorApi } from '../api/cliente'
 import { useCamposEmprendimiento } from '../hooks/useCamposEmprendimiento'
-import { CORREO_RE, limpiarTelefono, normalizarEmprendimiento, telefonoValido } from '../validacion'
+import { CORREO_RE, errorNombre, limpiarTelefono, normalizarEmprendimiento, normalizarNombre, telefonoValido } from '../validacion'
 import CampoTexto from './CampoTexto'
 import EmprendimientoCampos from './EmprendimientoCampos'
 
 type Metodo = 'correo' | 'telefono'
-type Campo = 'contacto' | 'contrasena' | 'confirmacion'
+type Campo = 'nombre' | 'contacto' | 'contrasena' | 'confirmacion'
 type Errores = Partial<Record<Campo, string>>
 
-function validar(metodo: Metodo, contacto: string, contrasena: string, confirmacion: string): Errores {
+function validar(
+  metodo: Metodo,
+  nombre: string,
+  esAnfitrion: boolean,
+  contacto: string,
+  contrasena: string,
+  confirmacion: string,
+): Errores {
   const errores: Errores = {}
+
+  // Los visitantes no pueden reservar sin nombre; para los anfitriones es opcional
+  const errorDelNombre = errorNombre(nombre, !esAnfitrion)
+  if (errorDelNombre) errores.nombre = errorDelNombre
 
   if (!contacto.trim()) {
     errores.contacto = metodo === 'correo' ? 'Ingresa tu correo' : 'Ingresa tu número de teléfono'
@@ -42,6 +53,7 @@ function validar(metodo: Metodo, contacto: string, contrasena: string, confirmac
 
 export default function RegistroForm({ onIrALogin }: { onIrALogin: () => void }) {
   const [metodo, setMetodo] = useState<Metodo>('correo')
+  const [nombre, setNombre] = useState('')
   const [contacto, setContacto] = useState('')
   const [contrasena, setContrasena] = useState('')
   const [confirmacion, setConfirmacion] = useState('')
@@ -53,7 +65,7 @@ export default function RegistroForm({ onIrALogin }: { onIrALogin: () => void })
   const [enviando, setEnviando] = useState(false)
   const [usuario, setUsuario] = useState<Usuario | null>(null)
 
-  const erroresLocales = validar(metodo, contacto, contrasena, confirmacion)
+  const erroresLocales = validar(metodo, nombre, esAnfitrion, contacto, contrasena, confirmacion)
   const errorDe = (campo: Campo) =>
     erroresServidor[campo] ?? (tocados[campo] ? erroresLocales[campo] : undefined)
 
@@ -72,7 +84,9 @@ export default function RegistroForm({ onIrALogin }: { onIrALogin: () => void })
   }
 
   function mostrarErrorServidor(err: ErrorApi) {
-    if (err.campo === 'correo' || err.campo === 'telefono') {
+    if (err.campo === 'nombre') {
+      setErroresServidor({ nombre: err.message })
+    } else if (err.campo === 'correo' || err.campo === 'telefono') {
       setErroresServidor({ contacto: err.message })
     } else if (err.campo === 'contrasena') {
       setErroresServidor({ contrasena: err.message })
@@ -86,7 +100,7 @@ export default function RegistroForm({ onIrALogin }: { onIrALogin: () => void })
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault()
-    setTocados({ contacto: true, contrasena: true, confirmacion: true })
+    setTocados({ nombre: true, contacto: true, contrasena: true, confirmacion: true })
     if (esAnfitrion) emprendimiento.tocarTodos()
     if (Object.keys(erroresLocales).length > 0 || (esAnfitrion && !emprendimiento.valido)) return
 
@@ -94,6 +108,7 @@ export default function RegistroForm({ onIrALogin }: { onIrALogin: () => void })
     setErrorGeneral(null)
     try {
       const datos: DatosRegistro = {
+        ...(normalizarNombre(nombre) && { nombre: normalizarNombre(nombre) }),
         ...(metodo === 'correo' ? { correo: contacto.trim() } : { telefono: limpiarTelefono(contacto) }),
         contrasena,
         rol: esAnfitrion ? 'anfitrion' : 'visitante',
@@ -124,7 +139,7 @@ export default function RegistroForm({ onIrALogin }: { onIrALogin: () => void })
         <button
           type="button"
           onClick={onIrALogin}
-          className="mt-6 w-full rounded-lg bg-campo-600 py-3 font-medium text-white shadow transition hover:bg-campo-700"
+          className="mt-6 w-full rounded-lg bg-campo-600 py-3 font-semibold text-white shadow transition hover:bg-campo-700"
         >
           Iniciar sesión
         </button>
@@ -135,7 +150,7 @@ export default function RegistroForm({ onIrALogin }: { onIrALogin: () => void })
   return (
     <form onSubmit={onSubmit} noValidate className="w-full max-w-md rounded-2xl bg-white p-8 shadow-lg">
       <h2 className="text-2xl font-bold text-campo-700">Crear cuenta</h2>
-      <p className="mt-1 text-sm text-stone-500">Regístrate con tu correo o tu número de teléfono.</p>
+      <p className="mt-1 text-sm text-stone-600">Regístrate con tu correo o tu número de teléfono.</p>
 
       <div className="mt-6 grid grid-cols-2 rounded-lg bg-stone-100 p-1 text-sm font-medium" role="tablist">
         {(['correo', 'telefono'] as const).map((m) => (
@@ -146,7 +161,7 @@ export default function RegistroForm({ onIrALogin }: { onIrALogin: () => void })
             aria-selected={metodo === m}
             onClick={() => cambiarMetodo(m)}
             className={`rounded-md py-2 transition ${
-              metodo === m ? 'bg-white text-campo-700 shadow' : 'text-stone-500 hover:text-stone-700'
+              metodo === m ? 'bg-white text-campo-700 shadow' : 'text-stone-600 hover:text-stone-700'
             }`}
           >
             {m === 'correo' ? 'Correo' : 'Teléfono'}
@@ -155,6 +170,22 @@ export default function RegistroForm({ onIrALogin }: { onIrALogin: () => void })
       </div>
 
       <div className="mt-6 space-y-4">
+        <CampoTexto
+          id="nombre"
+          label={esAnfitrion ? 'Tu nombre (opcional)' : 'Tu nombre'}
+          type="text"
+          autoComplete="name"
+          maxLength={100}
+          placeholder="Nombre y apellido"
+          ayuda={esAnfitrion ? 'Lo necesitarás si reservas experiencias de otros anfitriones.' : 'El anfitrión lo verá en tus reservas.'}
+          value={nombre}
+          error={errorDe('nombre')}
+          onChange={(v) => {
+            setNombre(v)
+            limpiarErrorServidor('nombre')
+          }}
+          onBlur={() => tocar('nombre')}
+        />
         <CampoTexto
           id="contacto"
           label={metodo === 'correo' ? 'Correo electrónico' : 'Número de teléfono'}
@@ -206,12 +237,12 @@ export default function RegistroForm({ onIrALogin }: { onIrALogin: () => void })
         className={`mt-6 flex w-full items-center gap-3 rounded-lg border-2 px-4 py-3 text-left transition ${
           esAnfitrion
             ? 'border-campo-500 bg-campo-50 text-campo-700'
-            : 'border-stone-200 text-stone-600 hover:border-campo-500'
+            : 'border-stone-400 text-stone-600 hover:border-campo-500'
         }`}
       >
         <span
           aria-hidden
-          className={`flex size-5 shrink-0 items-center justify-center rounded border-2 text-xs font-bold ${
+          className={`flex size-5 shrink-0 items-center justify-center rounded border-2 text-sm font-bold ${
             esAnfitrion ? 'border-campo-600 bg-campo-600 text-white' : 'border-stone-300'
           }`}
         >
@@ -219,7 +250,7 @@ export default function RegistroForm({ onIrALogin }: { onIrALogin: () => void })
         </span>
         <span>
           <span className="block font-medium">Soy anfitrión</span>
-          <span className="block text-sm text-stone-500">Quiero publicar mi emprendimiento turístico</span>
+          <span className="block text-sm text-stone-600">Quiero publicar mi emprendimiento turístico</span>
         </span>
       </button>
 
@@ -239,12 +270,12 @@ export default function RegistroForm({ onIrALogin }: { onIrALogin: () => void })
       <button
         type="submit"
         disabled={enviando}
-        className="mt-6 w-full rounded-lg bg-campo-600 py-3 font-medium text-white shadow transition hover:bg-campo-700 disabled:cursor-not-allowed disabled:opacity-60"
+        className="mt-6 w-full rounded-lg bg-campo-600 py-3 font-semibold text-white shadow transition hover:bg-campo-700 disabled:cursor-not-allowed disabled:opacity-60"
       >
         {enviando ? 'Creando cuenta…' : esAnfitrion ? 'Crear cuenta de anfitrión' : 'Crear cuenta'}
       </button>
 
-      <p className="mt-4 text-center text-sm text-stone-500">
+      <p className="mt-4 text-center text-sm text-stone-600">
         ¿Ya tienes cuenta?{' '}
         <button type="button" onClick={onIrALogin} className="font-medium text-campo-600 hover:underline">
           Inicia sesión

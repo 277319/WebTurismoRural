@@ -9,6 +9,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.db import Base
 
 if TYPE_CHECKING:
+    from app.models.disponibilidad_experiencia import DisponibilidadExperiencia
     from app.models.emprendimiento import Emprendimiento
     from app.models.foto_experiencia import FotoExperiencia
 
@@ -23,6 +24,8 @@ class TipoExperiencia(str, enum.Enum):
     acuatica = "acuatica"
     avistamiento = "avistamiento"
     cultural = "cultural"
+    # Se reserva por noches: el precio es por persona y noche, y los cupos de cada día son camas libres esa noche
+    hospedaje = "hospedaje"
 
 
 class EstadoExperiencia(str, enum.Enum):
@@ -67,4 +70,9 @@ class Experiencia(Base):
         back_populates="experiencia",
         cascade="all, delete-orphan",
         order_by="FotoExperiencia.orden",
+    )
+    disponibilidad: Mapped[list["DisponibilidadExperiencia"]] = relationship(
+        back_populates="experiencia",
+        cascade="all, delete-orphan",
+        order_by="DisponibilidadExperiencia.fecha",
     )

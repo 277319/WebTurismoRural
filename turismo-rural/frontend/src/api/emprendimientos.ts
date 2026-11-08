@@ -58,6 +58,12 @@ export async function editarEmprendimiento(id: number, datos: DatosEdicionEmpren
   return json(await apiFetch(`/emprendimientos/${id}`, { method: 'PUT', body: JSON.stringify(datos) }))
 }
 
+/** Borra el emprendimiento con todas sus experiencias y fotos. No se puede deshacer. */
+export async function eliminarEmprendimiento(id: number): Promise<void> {
+  const res = await apiFetch(`/emprendimientos/${id}`, { method: 'DELETE' })
+  if (!res.ok) throw await errorDesdeRespuesta(res)
+}
+
 export async function subirFotoEmprendimiento(id: number, foto: File): Promise<Emprendimiento> {
   const cuerpo = new FormData()
   cuerpo.append('foto', foto)
