@@ -57,6 +57,9 @@ export default function ReservasExperiencia() {
 const nombreVisitante = (r: ReservaAnfitrion) =>
   r.visitante.nombre || r.visitante.correo || r.visitante.telefono || 'Visitante'
 
+/** Adónde le llegan los avisos: el correo que indicó al reservar (o el de su cuenta, en reservas antiguas) */
+const correoDe = (r: ReservaAnfitrion) => r.correo ?? r.visitante.correo
+
 /** Acciones de un clic, sin diálogo de confirmación */
 type AccionRapida = 'confirmar' | 'pagar'
 
@@ -169,13 +172,13 @@ function ListaReservas({
                 {r.visitante.telefono}
               </a>
             )}
-            {r.visitante.correo && (
+            {correoDe(r) && (
               <a
-                href={`mailto:${r.visitante.correo}`}
+                href={`mailto:${correoDe(r)}`}
                 className="inline-flex items-center gap-1 break-all hover:underline"
               >
                 <Mail className="size-4 shrink-0" aria-hidden />
-                {r.visitante.correo}
+                {correoDe(r)}
               </a>
             )}
           </span>
@@ -299,7 +302,7 @@ function ListaReservas({
               volverán a quedar libres.
             </p>
             <p>
-              {aRechazar.visitante.correo
+              {correoDe(aRechazar)
                 ? 'Le avisaremos por correo para que pueda elegir otra fecha.'
                 : 'No tiene correo registrado: avísale tú por teléfono.'}
             </p>

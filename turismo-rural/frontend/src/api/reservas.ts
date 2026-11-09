@@ -79,9 +79,11 @@ export type DatosReserva = {
   personas: number
   /** Obligatorio si la experiencia tiene precio; en las gratuitas se omite */
   metodo_pago: MetodoPago | null
+  /** Adónde se avisan los cambios de estado de la reserva */
+  correo: string
 }
 
-export type Reserva = Omit<DatosReserva, 'metodo_pago'> & {
+export type Reserva = Omit<DatosReserva, 'metodo_pago' | 'correo'> & {
   id: number
   /** 'YYYY-MM-DD': el día siguiente a la última noche */
   fecha_salida: string
@@ -98,6 +100,8 @@ export type Reserva = Omit<DatosReserva, 'metodo_pago'> & {
   total: number
   estado: EstadoReserva
   metodo_pago: MetodoPago | null
+  /** Nulo solo en reservas anteriores a que se pidiera el correo */
+  correo: string | null
   fecha_creacion: string
 }
 

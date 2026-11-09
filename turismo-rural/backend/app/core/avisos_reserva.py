@@ -68,12 +68,17 @@ def datos_reserva(reserva: Reserva) -> dict[str, Any]:
     }
 
 
+def correo_visitante(reserva: Reserva) -> str | None:
+    """El correo indicado al reservar; en las reservas anteriores a ese campo, el de la cuenta."""
+    return reserva.correo or reserva.visitante.correo
+
+
 def avisar_nueva_solicitud(tareas: BackgroundTasks, reserva: Reserva) -> None:
     """Acuse al visitante y aviso al anfitrión, que tiene que confirmarla o rechazarla."""
     datos = datos_reserva(reserva)
     programar_correo(
         tareas,
-        reserva.visitante.correo,
+        correo_visitante(reserva),
         f"Recibimos tu solicitud para {datos['experiencia']}",
         "nueva_solicitud.html",
         para_anfitrion=False,
@@ -87,7 +92,7 @@ def avisar_nueva_solicitud(tareas: BackgroundTasks, reserva: Reserva) -> None:
         "nueva_solicitud.html",
         para_anfitrion=True,
         anfitrion=anfitrion.nombre,
-        contacto_visitante=reserva.visitante.correo or reserva.visitante.telefono,
+        contacto_visitante=correo_visitante(reserva) or reserva.visitante.telefono,
         url_reservas_experiencia=f"{settings.FRONTEND_URL}/experiencias/{reserva.experiencia_id}/reservas",
         **datos,
     )
@@ -97,7 +102,7 @@ def avisar_confirmada(tareas: BackgroundTasks, reserva: Reserva) -> None:
     datos = datos_reserva(reserva)
     programar_correo(
         tareas,
-        reserva.visitante.correo,
+        correo_visitante(reserva),
         f"¡Tu reserva está confirmada! {datos['experiencia']}",
         "reserva_confirmada.html",
         **datos,
@@ -108,7 +113,7 @@ def avisar_rechazada(tareas: BackgroundTasks, reserva: Reserva) -> None:
     datos = datos_reserva(reserva)
     programar_correo(
         tareas,
-        reserva.visitante.correo,
+        correo_visitante(reserva),
         f"Tu solicitud para {datos['experiencia']} no fue aceptada",
         "reserva_rechazada.html",
         **datos,
@@ -119,7 +124,7 @@ def avisar_pagada(tareas: BackgroundTasks, reserva: Reserva) -> None:
     datos = datos_reserva(reserva)
     programar_correo(
         tareas,
-        reserva.visitante.correo,
+        correo_visitante(reserva),
         f"Pago recibido: {datos['experiencia']}",
         "reserva_pagada.html",
         **datos,

@@ -70,7 +70,8 @@ Los cambios de estado de una reserva se avisan por correo con
 | `PATCH /reservas/{id}/marcar-pagada` | visitante           | `reserva_pagada.html`     |
 
 Las plantillas Jinja están en `backend/app/templates/correos/` (`base.html` es el diseño común y
-`_componentes.html` las piezas compartidas). Los usuarios registrados solo con teléfono no reciben correos.
+`_componentes.html` las piezas compartidas). Al reservar se pide un correo (se propone el de la cuenta):
+los avisos de esa reserva van ahí, así que también les llegan a quienes se registraron solo con teléfono.
 
 En desarrollo, `docker compose up -d` levanta **Mailpit**, que atrapa los correos sin entregarlos:
 se ven en http://localhost:8025. Para un SMTP real, define en `backend/.env`:
