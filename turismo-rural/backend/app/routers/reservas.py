@@ -94,6 +94,7 @@ def crear_reserva(
         total=experiencia.precio_por_persona * datos.personas * datos.noches,
         estado=EstadoReserva.pendiente,
         metodo_pago=None if gratuita else datos.metodo_pago,
+        correo=datos.correo,
     )
     db.add(reserva)
     db.commit()

@@ -3,7 +3,7 @@ from datetime import date, datetime, timedelta
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
-from sqlalchemy import CheckConstraint, Date, DateTime, Enum, ForeignKey, Index, Integer, Numeric, func
+from sqlalchemy import CheckConstraint, Date, DateTime, Enum, ForeignKey, Index, Integer, Numeric, String, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.db import Base
@@ -67,6 +67,9 @@ class Reserva(Base):
     )
     # Sin método en las experiencias gratuitas
     metodo_pago: Mapped[MetodoPago | None] = mapped_column(Enum(MetodoPago, name="metodo_pago"))
+    # Adónde se avisan los cambios de estado. Obligatorio al reservar (así también reciben avisos las
+    # cuentas registradas solo con teléfono); nulo solo en reservas anteriores a este campo
+    correo: Mapped[str | None] = mapped_column(String(255))
     fecha_creacion: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     fecha_actualizacion: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()

@@ -32,6 +32,8 @@ import { useAuth } from '../auth/contexto'
 import { aIso, desdeIso, formatoDia, formatoFechaLarga, hoyLocal, sumarDias } from '../fechas'
 import { useCarga } from '../hooks/useCarga'
 import { esHospedaje } from '../tiposExperiencia'
+import { CORREO_RE } from '../validacion'
+import CampoTexto from './CampoTexto'
 
 /** Opciones principales; "al llegar" se completa eligiendo efectivo o tarjeta */
 type OpcionPago = 'en_linea' | 'al_llegar' | 'transferencia'
@@ -67,6 +69,8 @@ export default function FormularioReserva({ experiencia: exp }: { experiencia: E
   const [personas, setPersonas] = useState(1)
   const [opcionPago, setOpcionPago] = useState<OpcionPago | null>(null)
   const [medioAlLlegar, setMedioAlLlegar] = useState<MedioAlLlegar | null>(null)
+  // Se propone el de la cuenta; las cuentas registradas solo con teléfono tienen que escribir uno
+  const [correo, setCorreo] = useState(usuario?.correo ?? '')
   const [enviando, setEnviando] = useState(false)
   const [error, setError] = useState<ErrorFormulario | null>(null)
   const [reserva, setReserva] = useState<Reserva | null>(null)
@@ -113,6 +117,8 @@ export default function FormularioReserva({ experiencia: exp }: { experiencia: E
         mensaje: opcionPago === 'al_llegar' ? 'Elige si pagarás en efectivo o con tarjeta' : 'Elige cómo vas a pagar',
       })
     }
+    if (!correo.trim()) return setError({ campo: 'correo', mensaje: 'Ingresa tu correo para recibir los avisos de tu reserva' })
+    if (!CORREO_RE.test(correo.trim())) return setError({ campo: 'correo', mensaje: 'El correo no es válido' })
 
     setEnviando(true)
     setError(null)
@@ -123,6 +129,7 @@ export default function FormularioReserva({ experiencia: exp }: { experiencia: E
         noches: nochesValidas,
         personas: personasValidas,
         metodo_pago: gratuita ? null : metodo,
+        correo: correo.trim(),
       })
       setReserva(nueva)
       recargar()
@@ -171,7 +178,7 @@ export default function FormularioReserva({ experiencia: exp }: { experiencia: E
   }
 
   const errorDe = (campo: string) => (error?.campo === campo ? error.mensaje : null)
-  const errorGeneral = error && !['fecha', 'noches', 'personas', 'metodo_pago'].includes(error.campo ?? '') ? error.mensaje : null
+  const errorGeneral = error && !['fecha', 'noches', 'personas', 'metodo_pago', 'correo'].includes(error.campo ?? '') ? error.mensaje : null
 
   return (
     <form onSubmit={reservar} noValidate className="space-y-5">
@@ -322,6 +329,30 @@ export default function FormularioReserva({ experiencia: exp }: { experiencia: E
         </fieldset>
       )}
 
+      {usuario && (
+        <fieldset>
+          <legend className="text-lg font-bold text-stone-800">{(hospedaje ? 3 : 2) + (gratuita ? 1 : 2)}. ¿Dónde te avisamos?</legend>
+          <div className="mt-2">
+            <CampoTexto
+              id="reserva-correo"
+              label="Correo electrónico"
+              type="email"
+              autoComplete="email"
+              maxLength={255}
+              placeholder="tu@correo.com"
+              ayuda="Te escribiremos cuando el anfitrión confirme o rechace tu reserva, y cuando se registre el pago."
+              value={correo}
+              error={errorDe('correo') ?? undefined}
+              onChange={(v) => {
+                setCorreo(v)
+                if (error?.campo === 'correo') setError(null)
+              }}
+              onBlur={() => {}}
+            />
+          </div>
+        </fieldset>
+      )}
+
       <div className="border-t border-stone-200 pt-4">
         {!gratuita && (
           <p className="flex justify-between text-sm text-stone-600">
@@ -409,6 +440,12 @@ function ConfirmacionReserva({ reserva, onOtra }: { reserva: Reserva; onOtra: ()
         Tus cupos ya están apartados. El anfitrión te contactará para confirmar
         {reserva.metodo_pago === 'transferencia' ? ' y enviarte los datos para la transferencia' : ''}
         {reserva.metodo_pago === 'en_linea' ? '. Cuando la confirme, podrás pagarla desde Mis reservas' : ''}.
+        {reserva.correo && (
+          <>
+            {' '}
+            Te avisaremos a <span className="font-medium text-stone-800">{reserva.correo}</span> cada cambio de estado.
+          </>
+        )}
       </p>
       <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm font-medium">
         <Link to="/mis-reservas" className="text-campo-600 hover:underline">
