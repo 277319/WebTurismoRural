@@ -50,12 +50,12 @@ async def enviar_correo(destinatario: str, asunto: str, plantilla: str, datos: d
 
 
 def programar_correo(
-    tareas: BackgroundTasks,
-    destinatario: str | None,
-    asunto: str,
-    plantilla: str,
-    datos: dict[str, Any],
+    tareas: BackgroundTasks, destinatario: str | None, asunto: str, plantilla: str, **datos: Any
 ) -> None:
+    """
+    Deja el correo para después de responder. `datos` deben ser valores simples (no modelos):
+    la sesión de la base ya está cerrada cuando corre la tarea.
+    """
     # Los usuarios registrados solo con teléfono no reciben correos
     if destinatario:
         tareas.add_task(enviar_correo, destinatario, asunto, plantilla, datos)
