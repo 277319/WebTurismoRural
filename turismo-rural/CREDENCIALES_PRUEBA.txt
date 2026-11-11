@@ -14,18 +14,8 @@ Se inicia sesión con el correo o con el teléfono (con o sin espacios: "+56 9 5
 
 Las cuentas no vienen en la base de datos: las crea un script. Con la app ya levantada:
 
-    docker compose up -d
+    docker compose up -d --build
     docker compose exec backend python -m scripts.datos_demo
-
-En modo producción (nginx), lo mismo con los dos archivos de compose:
-
-    docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
-    docker compose -f docker-compose.yml -f docker-compose.prod.yml exec backend python -m scripts.datos_demo
-
-Sin Docker (con el entorno virtual del backend activado):
-
-    cd backend
-    python -m scripts.datos_demo
 
 Tarda unos 30 segundos (genera las fotos). Se puede ejecutar las veces que se quiera: borra
 las cuentas de prueba anteriores y las vuelve a crear desde cero, sin tocar las demás
@@ -33,8 +23,7 @@ cuentas. Las fechas se calculan desde el día en que se ejecuta, así que siempr
 disponibles hacia adelante.
 
 Dónde abrir la app:
-    Modo desarrollo   http://localhost:5173
-    Modo producción   http://localhost        (docker-compose.prod.yml, ver README)
+    App               http://localhost
     Correos enviados  http://localhost:8025   (Mailpit: aquí llegan todos los avisos)
     Desde otro equipo de la misma red: cambiar "localhost" por la IP del ordenador que
     ejecuta la app.
