@@ -26,12 +26,35 @@ turismo-rural/
 
 ## Puesta en marcha
 
-### Base de datos (y backend) con Docker
+### Con Docker
 
 ```bash
 docker compose up -d db          # solo PostgreSQL
-docker compose up -d             # PostgreSQL + backend
+docker compose up -d             # todo: PostgreSQL + backend + frontend + Mailpit
 ```
+
+El frontend queda en http://localhost:5173, con recarga en caliente sobre `./frontend`. El contenedor
+tiene su propio `node_modules`: al agregar una dependencia, reconstrúyelo con
+`docker compose up -d --build -V frontend`.
+
+**Modo producción**, todo en http://localhost:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+```
+
+- **Frontend:** nginx entrega los estáticos de `dist/`, devuelve `index.html` en las rutas de React
+  Router y redirige `/api/*` al backend quitando el prefijo, igual que el proxy de Vite
+  ([`frontend/nginx.conf`](frontend/nginx.conf)).
+- **Backend:** el código va dentro de la imagen y corre sin `--reload`; al arrancar aplica las
+  migraciones (`alembic upgrade head`). No publica el puerto 8000: solo se llega por `/api`. Las
+  fotos subidas siguen en `backend/uploads/`.
+- **URLs públicas:** `FRONTEND_URL` (por defecto `http://localhost`, para los enlaces de los correos y
+  las páginas de pago) y `BACKEND_URL` (destino de los avisos de pago). Se cambian con variables de
+  entorno o en un `.env` junto a `docker-compose.yml`; por ejemplo, con Mercado Pago:
+  `BACKEND_URL=https://tudominio.cl/api`.
+
+Para volver al modo desarrollo: `docker compose up -d --build`.
 
 ### Backend en local
 
@@ -55,6 +78,18 @@ npm run dev
 ```
 
 App en http://localhost:5173 (las peticiones a `/api` se redirigen al backend).
+
+## Datos de prueba
+
+```bash
+docker compose exec backend python -m scripts.datos_demo
+```
+
+Crea 5 anfitriones (con 6 emprendimientos, 23 experiencias, fotos y fechas disponibles) y 4
+visitantes con reservas en todos los estados. Las cuentas y lo que tiene cada una están en
+[`CREDENCIALES_PRUEBA.txt`](CREDENCIALES_PRUEBA.txt); todas usan la contraseña `Rural2026`. Se puede
+repetir: reemplaza las cuentas de prueba anteriores sin tocar las demás, y las fechas parten del día
+en que se ejecuta.
 
 ## Correos
 
@@ -126,18 +161,3 @@ alembic upgrade head
 ```
 
 Importa cada modelo nuevo en `app/models/__init__.py` para que Alembic lo detecte.
-
-Open two terminals in VS Code. The split-terminal button is handy for this.
-
-Database: run docker compose up -d once. It stays running.
-Terminal 1 (backend):
-bash
-   cd backend
-   source .venv/bin/activate
-   uvicorn app.main:app --reload
-Terminal 2 (frontend):
-bash
-   cd frontend
-   npm run dev
-
-To check the setup end to end, call /health from a React component using import.meta.env.VITE_API_URL. If it returns {"status": "ok"}, the frontend, backend and CORS are all wired correctly, and you’re ready to start HU01.

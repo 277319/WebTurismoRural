@@ -32,6 +32,22 @@ services:
       mailpit:
         condition: service_started
 
+  frontend:
+    build:
+      context: ./frontend
+      target: dev
+    environment:
+      API_URL: http://backend:8000
+      VITE_USE_POLLING: "true"
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      # node_modules propio del contenedor: los de Windows traen binarios nativos que no sirven en Linux
+      - /app/node_modules
+    depends_on:
+      - backend
+
   # Servidor SMTP de desarrollo: atrapa los correos sin entregarlos y los muestra en http://localhost:8025
   mailpit:
     image: axllent/mailpit

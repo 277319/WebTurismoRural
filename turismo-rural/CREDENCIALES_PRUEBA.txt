@@ -1,0 +1,129 @@
+==========================================================================================
+  TURISMO RURAL - CUENTAS DE PRUEBA
+==========================================================================================
+
+Contraseña de TODAS las cuentas:   Rural2026
+
+Se inicia sesión con el correo o con el teléfono (con o sin espacios: "+56 9 5550 2004" o
+"+56955502004").
+
+
+------------------------------------------------------------------------------------------
+  1. CARGAR LAS CUENTAS (en cualquier ordenador)
+------------------------------------------------------------------------------------------
+
+Las cuentas no vienen en la base de datos: las crea un script. Con la app ya levantada:
+
+    docker compose up -d
+    docker compose exec backend python -m scripts.datos_demo
+
+En modo producción (nginx), lo mismo con los dos archivos de compose:
+
+    docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+    docker compose -f docker-compose.yml -f docker-compose.prod.yml exec backend python -m scripts.datos_demo
+
+Sin Docker (con el entorno virtual del backend activado):
+
+    cd backend
+    python -m scripts.datos_demo
+
+Tarda unos 30 segundos (genera las fotos). Se puede ejecutar las veces que se quiera: borra
+las cuentas de prueba anteriores y las vuelve a crear desde cero, sin tocar las demás
+cuentas. Las fechas se calculan desde el día en que se ejecuta, así que siempre hay fechas
+disponibles hacia adelante.
+
+Dónde abrir la app:
+    Modo desarrollo   http://localhost:5173
+    Modo producción   http://localhost        (docker-compose.prod.yml, ver README)
+    Correos enviados  http://localhost:8025   (Mailpit: aquí llegan todos los avisos)
+    Desde otro equipo de la misma red: cambiar "localhost" por la IP del ordenador que
+    ejecuta la app.
+
+Los correos son @example.com, un dominio reservado que nunca entrega correo real: los avisos
+de reservas se ven en Mailpit.
+
+
+------------------------------------------------------------------------------------------
+  2. ANFITRIONES
+------------------------------------------------------------------------------------------
+
+  Nombre                   Correo                               Teléfono
+  -----------------------  -----------------------------------  ----------------
+  Rosa Antinao             rosa.antinao@example.com             +56 9 5550 1001
+  Juan Carlos Millalonco   juancarlos.millalonco@example.com    +56 9 5550 1102
+  Marcela Soto             marcela.soto@example.com             -
+  Pedro Hernández          pedro.hernandez@example.com          +56 9 5550 1305
+  Luis Paillalef           luis.paillalef@example.com           -
+
+Rosa Antinao - "Refugio Rural Los Coigües" (Curarrehue, La Araucanía)
+    8 experiencias: senderismo, cabalgata, cocina de fogón, huerta (gratuita), telar
+    mapuche, pesca con mosca, observación de aves (PAUSADA) y cabaña (hospedaje).
+    Reservas recibidas: 1 pendiente por confirmar o rechazar, 3 confirmadas (una gratuita)
+    y 1 pagada de una visita pasada. La pesca con mosca tiene un día AGOTADO.
+
+Juan Carlos Millalonco - "Agroturismo Rayén Mapu" (Dalcahue y Castro, Chiloé)
+    5 experiencias: curanto al hoyo, navegación a isla Quinchao, taller de tejido, ruta de
+    iglesias patrimoniales y palafito (hospedaje).
+    Reservas recibidas: 2 pendientes (una de 3 noches en el palafito) y 1 pagada.
+
+Marcela Soto - DOS emprendimientos (valle de Elqui, Coquimbo)
+    "Domos Cielo de Elqui": observación astronómica, cabalgata y domo (hospedaje).
+    "Huerta Las Higueras": cosecha de fruta (gratuita) y taller de mermeladas.
+    Reservas recibidas: 1 pagada en línea y 1 estadía pasada pagada en línea.
+
+Pedro Hernández - "Kayak y Campo Lago Ranco" (Futrono, Los Ríos)
+    5 experiencias: kayak, pesca de trucha, sendero al salto, visita a isla Huapi y
+    caminata nocturna (PAUSADA).
+    Reservas recibidas: 1 pendiente, 1 cancelada por la visitante y 1 rechazada.
+
+Luis Paillalef - "Cabañas Lican Ray" (Lican Ray)
+    Anfitrión recién registrado: emprendimiento sin experiencias todavía. Sirve para
+    probar crear una experiencia desde cero y abrir sus fechas.
+
+
+------------------------------------------------------------------------------------------
+  3. VISITANTES
+------------------------------------------------------------------------------------------
+
+  Nombre                   Correo                               Teléfono
+  -----------------------  -----------------------------------  ----------------
+  Camila Rojas             camila.rojas@example.com             +56 9 5550 2001
+  Diego Fuentes            diego.fuentes@example.com            -
+  Valentina Muñoz          valentina.munoz@example.com          -
+  Sebastián Torres         - (solo teléfono)                    +56 9 5550 2004
+
+Camila Rojas - una reserva en cada estado
+    - Cabalgata (Rosa): CONFIRMADA, con un intento de pago en línea rechazado. Se puede
+      pagar desde "Mis reservas" (pasarela simulada).
+    - Palafito (Juan Carlos): PENDIENTE, 3 noches para 2 personas.
+    - Observación astronómica (Marcela): PAGADA en línea.
+    - Kayak (Pedro): CANCELADA.
+    - Sendero al volcán Lanín (Rosa): PAGADA, visita de hace 20 días.
+
+Diego Fuentes
+    - Pesca con mosca (Rosa): CONFIRMADA para 4 personas (deja el día agotado).
+    - Curanto al hoyo (Juan Carlos): PENDIENTE.
+    - Día en la huerta (Rosa): CONFIRMADA, gratuita (sin pago).
+    - Visita a isla Huapi (Pedro): RECHAZADA.
+    - Domo (Marcela): PAGADA en línea, estadía de 2 noches hace 40 días.
+
+Valentina Muñoz
+    Cuenta nueva, sin reservas: sirve para probar una reserva desde cero.
+
+Sebastián Torres - se registró solo con teléfono
+    Inicia sesión con +56 9 5550 2004. Sus avisos llegan a sebastian.torres@example.com,
+    el correo que dio al reservar.
+    - Pesca de trucha (Pedro): PENDIENTE.
+    - Ruta de iglesias (Juan Carlos): PAGADA (el anfitrión registró la transferencia).
+    - Cocina de fogón (Rosa): PENDIENTE.
+
+
+------------------------------------------------------------------------------------------
+  4. PAGOS DE PRUEBA
+------------------------------------------------------------------------------------------
+
+Con PROVEEDOR_PAGO=simulado (el valor por defecto) no se mueve dinero: al pagar se abre una
+página de prueba con los botones "Simular pago aprobado" y "Simular pago rechazado".
+
+Para probarlo de punta a punta: entrar como Camila y pagar la cabalgata, o reservar como
+Valentina, confirmar la reserva como el anfitrión y volver a Valentina para pagarla.
