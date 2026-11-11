@@ -1,3 +1,7 @@
+# Toda la app en http://localhost, con una sola orden y en cualquier ordenador con Docker:
+#   docker compose up -d --build
+# No hace falta ningún archivo extra: los valores de abajo sirven tal cual. Para cambiarlos (SMTP real,
+# Mercado Pago, otro puerto...), copia .env.example a .env y edítalo.
 services:
   db:
     image: postgres:16
@@ -6,8 +10,8 @@ services:
       POSTGRES_USER: turismo
       POSTGRES_PASSWORD: turismo
       POSTGRES_DB: turismo_rural
-    ports:
-      - "5432:5432"
+    # Sin puerto publicado: así no choca con un PostgreSQL instalado en el equipo.
+    # Para entrar: docker compose exec db psql -U turismo turismo_rural
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -16,45 +20,46 @@ services:
       timeout: 5s
       retries: 10
 
+  # FastAPI: al arrancar aplica las migraciones pendientes. Solo se llega a través de nginx (/api)
   backend:
     build: ./backend
-    env_file: ./backend/.env
+    restart: unless-stopped
+    env_file:
+      - path: ./.env
+        required: false
     environment:
       DATABASE_URL: postgresql+psycopg://turismo:turismo@db:5432/turismo_rural
-      MAIL_SERVER: mailpit
-    ports:
-      - "8000:8000"
+      SECRET_KEY: ${SECRET_KEY:-clave-de-desarrollo-cambiala-en-produccion}
+      # Para los enlaces de los correos y las páginas de pago
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost}
+      # Destino de los avisos de pago: el simulado se llama a sí mismo; Mercado Pago necesita una URL pública
+      BACKEND_URL: ${BACKEND_URL:-http://localhost:8000}
+      MAIL_SERVER: ${MAIL_SERVER:-mailpit}
     volumes:
-      - ./backend:/app
+      - uploads:/app/uploads
     depends_on:
       db:
         condition: service_healthy
       mailpit:
         condition: service_started
 
-  frontend:
-    build:
-      context: ./frontend
-      target: dev
-    environment:
-      API_URL: http://backend:8000
-      VITE_USE_POLLING: "true"
+  # nginx entrega el frontend compilado y redirige /api al backend (frontend/nginx.conf)
+  nginx:
+    build: ./frontend
+    restart: unless-stopped
     ports:
-      - "5173:5173"
-    volumes:
-      - ./frontend:/app
-      # node_modules propio del contenedor: los de Windows traen binarios nativos que no sirven en Linux
-      - /app/node_modules
+      - "${PUERTO:-80}:80"
     depends_on:
       - backend
 
-  # Servidor SMTP de desarrollo: atrapa los correos sin entregarlos y los muestra en http://localhost:8025
+  # Servidor SMTP de prueba: atrapa los correos sin entregarlos y los muestra en http://localhost:8025
   mailpit:
-    image: axllent/mailpit
+    image: axllent/mailpit:v1.33.0
     restart: unless-stopped
     ports:
-      - "1025:1025"
       - "8025:8025"
 
 volumes:
   pgdata:
+  # Fotos subidas por los usuarios
+  uploads:

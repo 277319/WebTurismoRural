@@ -17,67 +17,58 @@ turismo-rural/
 │   │   ├── schemas/       # esquemas Pydantic
 │   │   └── core/          # config, db, security
 │   ├── alembic/           # migraciones
-│   ├── requirements.txt
-│   └── .env
+│   └── requirements.txt
 ├── frontend/
-├── docker-compose.yml
+│   └── nginx.conf         # servidor web: estáticos + proxy de /api
+├── docker-compose.yml     # la única forma de levantar la app
+├── .env.example           # configuración opcional
 └── README.md
 ```
 
 ## Puesta en marcha
 
-### Con Docker
+Solo hace falta [Docker](https://docs.docker.com/get-docker/) (con Docker Compose 2.24 o superior).
+En cualquier ordenador:
 
 ```bash
-docker compose up -d db          # solo PostgreSQL
-docker compose up -d             # todo: PostgreSQL + backend + frontend + Mailpit
+docker compose up -d --build
 ```
 
-El frontend queda en http://localhost:5173, con recarga en caliente sobre `./frontend`. El contenedor
-tiene su propio `node_modules`: al agregar una dependencia, reconstrúyelo con
-`docker compose up -d --build -V frontend`.
+| Qué                    | Dónde                       |
+| ---------------------- | --------------------------- |
+| App                    | http://localhost            |
+| API (documentación)    | http://localhost/api/docs   |
+| Correos enviados       | http://localhost:8025       |
 
-**Modo producción**, todo en http://localhost:
+Se levantan cuatro contenedores:
 
-```bash
-docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
-```
+- **nginx:** compila el frontend dentro de la imagen (con las versiones exactas de
+  `package-lock.json`), entrega los estáticos, devuelve `index.html` en las rutas de React Router y
+  redirige `/api/*` al backend quitando el prefijo ([`frontend/nginx.conf`](frontend/nginx.conf)).
+- **backend:** FastAPI. Al arrancar aplica las migraciones (`alembic upgrade head`). No publica
+  puerto: solo se llega por `/api`.
+- **db:** PostgreSQL 16. Tampoco publica puerto, así que no choca con uno instalado en el equipo:
+  `docker compose exec db psql -U turismo turismo_rural`.
+- **mailpit:** atrapa los correos (ver [Correos](#correos)).
 
-- **Frontend:** nginx entrega los estáticos de `dist/`, devuelve `index.html` en las rutas de React
-  Router y redirige `/api/*` al backend quitando el prefijo, igual que el proxy de Vite
-  ([`frontend/nginx.conf`](frontend/nginx.conf)).
-- **Backend:** el código va dentro de la imagen y corre sin `--reload`; al arrancar aplica las
-  migraciones (`alembic upgrade head`). No publica el puerto 8000: solo se llega por `/api`. Las
-  fotos subidas siguen en `backend/uploads/`.
-- **URLs públicas:** `FRONTEND_URL` (por defecto `http://localhost`, para los enlaces de los correos y
-  las páginas de pago) y `BACKEND_URL` (destino de los avisos de pago). Se cambian con variables de
-  entorno o en un `.env` junto a `docker-compose.yml`; por ejemplo, con Mercado Pago:
+Los datos quedan en volúmenes de Docker (`pgdata` para la base y `uploads` para las fotos): se
+conservan entre reinicios y reconstrucciones. `docker compose down -v` los borra y deja todo de cero.
+
+Después de cambiar código, se vuelve a ejecutar `docker compose up -d --build`.
+
+### Configuración
+
+No hace falta ningún archivo extra. Para cambiar algo, copia [`.env.example`](.env.example) a `.env`
+(junto a `docker-compose.yml`) y edita lo que necesites:
+
+- `SECRET_KEY`: firma de las sesiones. En producción, una cadena larga y aleatoria.
+- `PUERTO`: si el 80 está ocupado (p. ej. `PUERTO=8080`; entonces `FRONTEND_URL=http://localhost:8080`).
+- `FRONTEND_URL` (por defecto `http://localhost`): para los enlaces de los correos y las páginas de pago.
+- `BACKEND_URL`: destino de los avisos de pago. Con Mercado Pago, una URL pública:
   `BACKEND_URL=https://tudominio.cl/api`.
+- SMTP real y Mercado Pago: ver más abajo.
 
-Para volver al modo desarrollo: `docker compose up -d --build`.
-
-### Backend en local
-
-```bash
-cd backend
-python -m venv .venv
-.venv\Scripts\activate           # Windows  (Linux/macOS: source .venv/bin/activate)
-pip install -r requirements.txt
-alembic upgrade head
-uvicorn app.main:app --reload
-```
-
-API en http://localhost:8000 — documentación en http://localhost:8000/docs
-
-### Frontend
-
-```bash
-cd frontend
-npm install
-npm run dev
-```
-
-App en http://localhost:5173 (las peticiones a `/api` se redirigen al backend).
+El `.env` no se sube al repositorio. Tras editarlo: `docker compose up -d`.
 
 ## Datos de prueba
 
@@ -108,8 +99,8 @@ Las plantillas Jinja están en `backend/app/templates/correos/` (`base.html` es 
 `_componentes.html` las piezas compartidas). Al reservar se pide un correo (se propone el de la cuenta):
 los avisos de esa reserva van ahí, así que también les llegan a quienes se registraron solo con teléfono.
 
-En desarrollo, `docker compose up -d` levanta **Mailpit**, que atrapa los correos sin entregarlos:
-se ven en http://localhost:8025. Para un SMTP real, define en `backend/.env`:
+Por defecto van a **Mailpit**, que los atrapa sin entregarlos: se ven en http://localhost:8025.
+Para un SMTP real, define en `.env`:
 
 ```env
 MAIL_SERVER=smtp.ejemplo.com
@@ -141,23 +132,25 @@ cobro y leer sus avisos. Para agregar otro, se implementan esos dos métodos y s
   como un aviso HTTP firmado, igual que el de un proveedor real.
 - **`mercadopago`**: Checkout Pro de Mercado Pago. Con credenciales de prueba se paga en su sandbox,
   con [tarjetas de prueba](https://www.mercadopago.cl/developers/es/docs/checkout-pro/additional-content/your-integrations/test/cards).
-  El aviso tiene que poder llegar al backend desde internet: en desarrollo, un túnel como
-  `ngrok http 8000`.
+  El aviso tiene que poder llegar al backend desde internet: en un equipo local, un túnel como
+  `ngrok http 80` (el backend se alcanza en `/api`).
 
 ```env
 PROVEEDOR_PAGO=mercadopago
 MP_ACCESS_TOKEN=TEST-...           # Tus integraciones > Credenciales de prueba
 MP_WEBHOOK_SECRET=...              # Tus integraciones > Webhooks (opcional: verifica la firma)
 MP_SANDBOX=true
-BACKEND_URL=https://xxxx.ngrok-free.app
+BACKEND_URL=https://xxxx.ngrok-free.app/api
 ```
 
 ## Migraciones
 
+Se aplican solas al arrancar el backend. Para crear una nueva (con la app levantada), montando
+`backend/` para que el archivo generado quede en el proyecto:
+
 ```bash
-cd backend
-alembic revision --autogenerate -m "descripcion"
-alembic upgrade head
+docker compose run --rm -v ./backend:/app backend alembic revision --autogenerate -m "descripcion"
+docker compose up -d --build backend
 ```
 
 Importa cada modelo nuevo en `app/models/__init__.py` para que Alembic lo detecte.
