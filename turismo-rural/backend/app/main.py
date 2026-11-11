@@ -1,3 +1,4 @@
+import mimetypes
 from pathlib import Path
 
 from fastapi import FastAPI
@@ -30,5 +31,7 @@ app.include_router(reservas.router)
 app.include_router(pagos.router)
 
 # Fotos subidas por los usuarios (p. ej. /uploads/emprendimientos/abc123.jpg)
+# python:slim no trae /etc/mime.types: sin esto, las .webp se servirían como text/plain
+mimetypes.add_type("image/webp", ".webp")
 Path(settings.UPLOADS_DIR).mkdir(parents=True, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=settings.UPLOADS_DIR), name="uploads")
