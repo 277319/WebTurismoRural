@@ -6,7 +6,24 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
 from app.core.config import settings
-from app.routers import auth, emprendimientos, experiencias, pagos, reservas, usuarios
+from app.routers import auth, emprendimientos, experiencias, health, pagos, reservas, usuarios
+
+
+class PrefijoProxy:
+    """nginx quita /api de la ruta y lo avisa en X-Forwarded-Prefix. Con ese root_path, /docs pide
+    /api/openapi.json cuando se abre por nginx y /openapi.json cuando se abre directo en el puerto 8000."""
+
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        if scope["type"] in ("http", "websocket"):
+            prefijo = dict(scope["headers"]).get(b"x-forwarded-prefix", b"").decode("latin-1").rstrip("/")
+            if prefijo:
+                # Starlette espera que path incluya root_path (y se lo quita al enrutar)
+                scope = dict(scope, root_path=prefijo, path=prefijo + scope["path"])
+        await self.app(scope, receive, send)
+
 
 app = FastAPI(title="Turismo Rural API")
 
@@ -17,12 +34,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(PrefijoProxy)
 
-@app.get("/health")
-def health():
-    return {"status": "ok"}
-
-
+app.include_router(health.router)
 app.include_router(auth.router)
 app.include_router(emprendimientos.router)
 app.include_router(usuarios.router)

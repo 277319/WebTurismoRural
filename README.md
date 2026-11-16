@@ -20,55 +20,75 @@ turismo-rural/
 │   └── requirements.txt
 ├── frontend/
 │   └── nginx.conf         # servidor web: estáticos + proxy de /api
-├── docker-compose.yml     # la única forma de levantar la app
-├── .env.example           # configuración opcional
+├── compose.yaml           # la única forma de levantar la app
+├── .env.example           # modelo del .env (cópialo y cambia POSTGRES_PASSWORD)
 └── README.md
 ```
 
 ## Puesta en marcha
 
 Solo hace falta [Docker](https://docs.docker.com/get-docker/) (con Docker Compose 2.24 o superior).
-En cualquier ordenador:
+En una terminal abierta en la carpeta de `compose.yaml`:
 
-```bash
+```powershell
+# 1. Configuración: copia el modelo y cambia POSTGRES_PASSWORD
+Copy-Item .env.example .env        # macOS / Linux: cp .env.example .env
+
+# 2. Valida el Compose sin imprimir contraseñas
+docker compose config -q
+
+# 3. Construye y levanta en segundo plano
 docker compose up -d --build
+
+# 4. Estado: backend y db deben quedar "healthy"
+docker compose ps
+
+# 5. Detener (conserva los datos)
+docker compose down
 ```
 
-| Qué                    | Dónde                       |
-| ---------------------- | --------------------------- |
-| App                    | http://localhost            |
-| API (documentación)    | http://localhost/api/docs   |
-| Correos enviados       | http://localhost:8025       |
+| Qué                    | Dónde                                                   |
+| ---------------------- | ------------------------------------------------------- |
+| App                    | http://localhost:8080                                   |
+| API (documentación)    | http://localhost:8000/docs o http://localhost:8080/api/docs |
+| Salud de API y BD      | http://localhost:8000/health                            |
+| Correos enviados       | http://localhost:8025                                   |
+
+Todos los puertos quedan ligados a `127.0.0.1`: la app solo se abre desde el equipo que la ejecuta.
 
 Se levantan cuatro contenedores:
 
 - **nginx:** compila el frontend dentro de la imagen (con las versiones exactas de
   `package-lock.json`), entrega los estáticos, devuelve `index.html` en las rutas de React Router y
   redirige `/api/*` al backend quitando el prefijo ([`frontend/nginx.conf`](frontend/nginx.conf)).
-- **backend:** FastAPI. Al arrancar aplica las migraciones (`alembic upgrade head`). No publica
-  puerto: solo se llega por `/api`.
-- **db:** PostgreSQL 16. Tampoco publica puerto, así que no choca con uno instalado en el equipo:
-  `docker compose exec db psql -U turismo turismo_rural`.
+  Arranca cuando el backend está sano.
+- **backend:** FastAPI. Al arrancar aplica las migraciones (`alembic upgrade head`). `/health`
+  comprueba también la conexión con PostgreSQL y es el healthcheck del contenedor.
+- **db:** PostgreSQL 16. No publica puerto, así que no choca con uno instalado en el equipo; la API
+  la alcanza como `db:5432` por la red de Compose: `docker compose exec db psql -U turismo turismo_rural`.
 - **mailpit:** atrapa los correos (ver [Correos](#correos)).
 
 Los datos quedan en volúmenes de Docker (`pgdata` para la base y `uploads` para las fotos): se
-conservan entre reinicios y reconstrucciones. `docker compose down -v` los borra y deja todo de cero.
+conservan entre `down`/`up` y reconstrucciones. **`docker compose down -v` los borra** y deja todo de cero.
 
 Después de cambiar código, se vuelve a ejecutar `docker compose up -d --build`.
 
 ### Configuración
 
-No hace falta ningún archivo extra. Para cambiar algo, copia [`.env.example`](.env.example) a `.env`
-(junto a `docker-compose.yml`) y edita lo que necesites:
+Todo se configura en `.env` (modelo en [`.env.example`](.env.example)), que no se sube al repositorio:
 
+- `POSTGRES_PASSWORD` (obligatoria), `POSTGRES_USER`, `POSTGRES_DB`: credenciales de la base. Se
+  aplican al crear el volumen `pgdata`; si ya existe, cambiarlas en `.env` no cambia la clave guardada.
+- `WEB_PORT` (8080), `API_PORT` (8000), `MAIL_UI_PORT` (8025): puertos del equipo, por si alguno
+  está ocupado.
 - `SECRET_KEY`: firma de las sesiones. En producción, una cadena larga y aleatoria.
-- `PUERTO`: si el 80 está ocupado (p. ej. `PUERTO=8080`; entonces `FRONTEND_URL=http://localhost:8080`).
-- `FRONTEND_URL` (por defecto `http://localhost`): para los enlaces de los correos y las páginas de pago.
+- `FRONTEND_URL` (por defecto `http://localhost:<WEB_PORT>`): para los enlaces de los correos y las
+  páginas de pago.
 - `BACKEND_URL`: destino de los avisos de pago. Con Mercado Pago, una URL pública:
   `BACKEND_URL=https://tudominio.cl/api`.
 - SMTP real y Mercado Pago: ver más abajo.
 
-El `.env` no se sube al repositorio. Tras editarlo: `docker compose up -d`.
+Tras editarlo: `docker compose up -d`.
 
 ## Datos de prueba
 
@@ -133,7 +153,7 @@ cobro y leer sus avisos. Para agregar otro, se implementan esos dos métodos y s
 - **`mercadopago`**: Checkout Pro de Mercado Pago. Con credenciales de prueba se paga en su sandbox,
   con [tarjetas de prueba](https://www.mercadopago.cl/developers/es/docs/checkout-pro/additional-content/your-integrations/test/cards).
   El aviso tiene que poder llegar al backend desde internet: en un equipo local, un túnel como
-  `ngrok http 80` (el backend se alcanza en `/api`).
+  `ngrok http 8080` (el backend se alcanza en `/api`).
 
 ```env
 PROVEEDOR_PAGO=mercadopago

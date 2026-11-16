@@ -1,5 +1,8 @@
+.git
 .venv
 __pycache__
+*.pyc
+.pytest_cache
 # Las fotos subidas van en un volumen y los secretos llegan por variables de entorno: no se copian a la imagen
 uploads
 .env
