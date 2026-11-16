@@ -14,6 +14,7 @@ Se inicia sesión con el correo o con el teléfono (con o sin espacios: "+56 9 5
 
 Las cuentas no vienen en la base de datos: las crea un script. Con la app ya levantada:
 
+    Copy-Item .env.example .env      (y cambiar POSTGRES_PASSWORD; macOS/Linux: cp)
     docker compose up -d --build
     docker compose exec backend python -m scripts.datos_demo
 
@@ -23,10 +24,11 @@ cuentas. Las fechas se calculan desde el día en que se ejecuta, así que siempr
 disponibles hacia adelante.
 
 Dónde abrir la app:
-    App               http://localhost
+    App               http://localhost:8080
+    API (Swagger)     http://localhost:8000/docs
     Correos enviados  http://localhost:8025   (Mailpit: aquí llegan todos los avisos)
-    Desde otro equipo de la misma red: cambiar "localhost" por la IP del ordenador que
-    ejecuta la app.
+    Los puertos están ligados a 127.0.0.1: solo se abren desde el ordenador que ejecuta
+    la app.
 
 Los correos son @example.com, un dominio reservado que nunca entrega correo real: los avisos
 de reservas se ven en Mailpit.

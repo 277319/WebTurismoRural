@@ -1,0 +1,78 @@
+# Toda la app en http://localhost:8080, en cualquier ordenador con Docker:
+#   Copy-Item .env.example .env      (macOS/Linux: cp .env.example .env) y cambia POSTGRES_PASSWORD
+#   docker compose config -q
+#   docker compose up -d --build
+# Los puertos quedan ligados a 127.0.0.1: la app solo se abre desde este equipo.
+services:
+  db:
+    image: postgres:16
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-turismo}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Copia .env.example a .env y define POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-turismo_rural}
+    # Sin puerto publicado: la API llega por la red interna de Compose (db:5432).
+    # Para entrar: docker compose exec db psql -U turismo turismo_rural
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # FastAPI: al arrancar aplica las migraciones pendientes. Se llega por nginx (/api) o directo en :8000
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    env_file:
+      - path: ./.env
+        required: false
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-turismo}:${POSTGRES_PASSWORD:-}@db:5432/${POSTGRES_DB:-turismo_rural}
+      SECRET_KEY: ${SECRET_KEY:-clave-de-desarrollo-cambiala-en-produccion}
+      # Para los enlaces de los correos y las páginas de pago
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:${WEB_PORT:-8080}}
+      # Destino de los avisos de pago: el simulado se llama a sí mismo; Mercado Pago necesita una URL pública
+      BACKEND_URL: ${BACKEND_URL:-http://localhost:8000}
+      MAIL_SERVER: ${MAIL_SERVER:-mailpit}
+    ports:
+      # Swagger en http://localhost:8000/docs y salud en http://localhost:8000/health
+      - "127.0.0.1:${API_PORT:-8000}:8000"
+    volumes:
+      - uploads:/app/uploads
+    healthcheck:
+      # /health también comprueba la conexión con PostgreSQL
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health', timeout=3)"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      # Margen para las migraciones del primer arranque
+      start_period: 30s
+    depends_on:
+      db:
+        condition: service_healthy
+      mailpit:
+        condition: service_started
+
+  # nginx entrega el frontend compilado y redirige /api al backend (frontend/nginx.conf)
+  nginx:
+    build: ./frontend
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${WEB_PORT:-8080}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  # Servidor SMTP de prueba: atrapa los correos sin entregarlos y los muestra en http://localhost:8025
+  mailpit:
+    image: axllent/mailpit:v1.33.0
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${MAIL_UI_PORT:-8025}:8025"
+
+volumes:
+  pgdata:
+  # Fotos subidas por los usuarios
+  uploads:
