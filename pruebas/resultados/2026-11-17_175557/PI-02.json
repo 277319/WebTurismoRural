@@ -1,0 +1,150 @@
+{
+  "id": "PI-02",
+  "flujo": "A",
+  "hu": "HU16, HU15",
+  "interfaces": "INT-01, INT-02",
+  "prioridad": "Media",
+  "escenario": "Consistencia",
+  "objetivo": "La reserva creada aparece una sola vez para la visitante y la anfitriona la ve.",
+  "precondiciones": "PI-01 ejecutado con PASS.",
+  "datos": "Reserva creada en PI-01.",
+  "pasos": "1. GET /api/reservas/mias como Valentina. 2. GET /api/experiencias/{id}/reservas como Rosa. 3. Contar filas en la BD.",
+  "esperado": "La reserva aparece exactamente 1 vez en Mis reservas; la anfitriona la ve «pendiente» con el nombre «Valentina Muñoz»; 1 fila en la BD.",
+  "evidencia": "Listados HTTP y conteo en la BD.",
+  "estado": "PASS",
+  "obtenido": "Mis reservas: 1 vez; anfitriona: pendiente, Valentina Muñoz; filas en BD: 1.",
+  "verificaciones": [
+    {
+      "descripcion": "Aparece exactamente una vez en Mis reservas",
+      "ok": true
+    },
+    {
+      "descripcion": "La anfitriona la ve pendiente con el nombre de la visitante",
+      "ok": true
+    },
+    {
+      "descripcion": "Una sola fila en la base",
+      "ok": true
+    }
+  ],
+  "fallidas": [],
+  "pasos_ejecutados": [
+    {
+      "peticion": "GET /api/reservas/mias",
+      "usuario": "valentina.munoz@example.com",
+      "cuerpo": null,
+      "cabeceras_extra": {},
+      "codigo": 200,
+      "respuesta": [
+        {
+          "id": 138,
+          "experiencia_id": 208,
+          "experiencia": {
+            "id": 208,
+            "tipo": "senderismo",
+            "titulo": "Sendero al mirador del volcán Lanín",
+            "localidad": "Curarrehue",
+            "emprendimiento": {
+              "id": 55,
+              "nombre": "Refugio Rural Los Coigües",
+              "telefono_contacto": "+56955501001"
+            }
+          },
+          "fecha": "2026-11-21",
+          "noches": 1,
+          "fecha_salida": "2026-11-22",
+          "personas": 2,
+          "precio_por_persona": 25000.0,
+          "total": 50000.0,
+          "estado": "pendiente",
+          "metodo_pago": "transferencia",
+          "correo": "valentina.munoz@example.com",
+          "fecha_creacion": "2026-11-17T20:56:07.732625Z"
+        }
+      ],
+      "nota": ""
+    },
+    {
+      "peticion": "GET /api/experiencias/208/reservas",
+      "usuario": "rosa.antinao@example.com",
+      "cuerpo": null,
+      "cabeceras_extra": {},
+      "codigo": 200,
+      "respuesta": [
+        {
+          "id": 128,
+          "experiencia_id": 208,
+          "experiencia": {
+            "id": 208,
+            "tipo": "senderismo",
+            "titulo": "Sendero al mirador del volcán Lanín",
+            "localidad": "Curarrehue",
+            "emprendimiento": {
+              "id": 55,
+              "nombre": "Refugio Rural Los Coigües",
+              "telefono_contacto": "+56955501001"
+            }
+          },
+          "fecha": "2026-10-28",
+          "noches": 1,
+          "fecha_salida": "2026-10-29",
+          "personas": 2,
+          "precio_por_persona": 25000.0,
+          "total": 50000.0,
+          "estado": "pagada",
+          "metodo_pago": "efectivo",
+          "correo": "camila.rojas@example.com",
+          "fecha_creacion": "2026-10-14T12:00:00Z",
+          "visitante": {
+            "id": 94,
+            "nombre": "Camila Rojas",
+            "correo": "camila.rojas@example.com",
+            "telefono": "+56955502001"
+          }
+        },
+        {
+          "id": 138,
+          "experiencia_id": 208,
+          "experiencia": {
+            "id": 208,
+            "tipo": "senderismo",
+            "titulo": "Sendero al mirador del volcán Lanín",
+            "localidad": "Curarrehue",
+            "emprendimiento": {
+              "id": 55,
+              "nombre": "Refugio Rural Los Coigües",
+              "telefono_contacto": "+56955501001"
+            }
+          },
+          "fecha": "2026-11-21",
+          "noches": 1,
+          "fecha_salida": "2026-11-22",
+          "personas": 2,
+          "precio_por_persona": 25000.0,
+          "total": 50000.0,
+          "estado": "pendiente",
+          "metodo_pago": "transferencia",
+          "correo": "valentina.munoz@example.com",
+          "fecha_creacion": "2026-11-17T20:56:07.732625Z",
+          "visitante": {
+            "id": 96,
+            "nombre": "Valentina Muñoz",
+            "correo": "valentina.munoz@example.com",
+            "telefono": null
+          }
+        }
+      ],
+      "nota": ""
+    },
+    {
+      "consulta_bd": "Reservas de la visitante en el sendero",
+      "sql": "SELECT count(*) FROM reservas r JOIN usuarios u ON u.id = r.visitante_id WHERE u.correo = 'valentina.munoz@example.com' AND r.experiencia_id = 208",
+      "filas": [
+        [
+          "1"
+        ]
+      ]
+    }
+  ],
+  "ejecutado": "2026-11-17T17:56:24"
+}

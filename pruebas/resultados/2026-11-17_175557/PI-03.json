@@ -1,0 +1,58 @@
+{
+  "id": "PI-03",
+  "flujo": "A",
+  "hu": "HU14, HU13",
+  "interfaces": "INT-02",
+  "prioridad": "Alta",
+  "escenario": "Sin disponibilidad",
+  "objetivo": "No se acepta una reserva en un día agotado.",
+  "precondiciones": "La pesca con mosca tiene su primer día abierto agotado (0 cupos) por datos_demo.",
+  "datos": "Valentina; «Pesca con mosca en el río Trancura»; día con 0 cupos; 1 persona; efectivo.",
+  "pasos": "1. Consultar la disponibilidad y ubicar el día con 0 cupos. 2. Contar reservas en la BD. 3. POST /api/reservas. 4. Volver a contar y consultar cupos.",
+  "esperado": "HTTP 409 «Esta fecha ya no tiene cupos disponibles. Elige otra»; no se crea reserva; el día sigue con 0 cupos.",
+  "evidencia": "Respuesta HTTP y conteos antes/después.",
+  "estado": "PASS",
+  "obtenido": "HTTP 409 «Esta fecha ya no tiene cupos disponibles. Elige otra»; reservas en BD 14 → 14; cupos del 2026-11-21: 0 → 0.",
+  "verificaciones": [
+    {
+      "descripcion": "HTTP 409",
+      "ok": true
+    },
+    {
+      "descripcion": "Mensaje de fecha sin cupos",
+      "ok": true
+    },
+    {
+      "descripcion": "No se crea reserva",
+      "ok": true
+    },
+    {
+      "descripcion": "El día sigue con 0 cupos",
+      "ok": true
+    }
+  ],
+  "fallidas": [],
+  "pasos_ejecutados": [
+    {
+      "peticion": "POST /api/reservas",
+      "usuario": "valentina.munoz@example.com",
+      "cuerpo": {
+        "experiencia_id": 213,
+        "fecha": "2026-11-21",
+        "personas": 1,
+        "metodo_pago": "efectivo",
+        "correo": "valentina.munoz@example.com"
+      },
+      "cabeceras_extra": {},
+      "codigo": 409,
+      "respuesta": {
+        "detail": {
+          "campo": "fecha",
+          "mensaje": "Esta fecha ya no tiene cupos disponibles. Elige otra"
+        }
+      },
+      "nota": ""
+    }
+  ],
+  "ejecutado": "2026-11-17T17:56:37"
+}

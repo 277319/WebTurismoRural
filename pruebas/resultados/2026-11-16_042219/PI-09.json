@@ -1,0 +1,148 @@
+{
+  "id": "PI-09",
+  "flujo": "B",
+  "hu": "HU18, HU17",
+  "interfaces": "INT-05, INT-02, INT-03",
+  "prioridad": "Alta",
+  "escenario": "Operación válida",
+  "objetivo": "Un pago en línea aprobado llega por webhook y deja la reserva pagada.",
+  "precondiciones": "Reserva de PI-01 confirmada (PI-07); PROVEEDOR_PAGO=simulado.",
+  "datos": "Valentina; reserva de PI-01.",
+  "pasos": "1. POST /api/pagos. 2. POST /api/pagos/{id}/simular {aprobar: true}. 3. Consultar GET /api/pagos/{id} hasta que se resuelva. 4. Revisar la BD y Mailpit.",
+  "esperado": "201 con URL /pagos/{id}/simulado; el webhook deja el pago «aprobado»; reserva «pagada» con método «en_linea»; correo «Pago recibido: …».",
+  "evidencia": "Respuestas HTTP, filas de reservas y pagos, asunto en Mailpit.",
+  "estado": "PASS",
+  "obtenido": "Pago #11 → aprobado; BD: reserva pagada, método en_linea, pago aprobado; correo sí.",
+  "verificaciones": [
+    {
+      "descripcion": "HTTP 201 y URL de la pasarela simulada",
+      "ok": true
+    },
+    {
+      "descripcion": "Simular aprobado: HTTP 200",
+      "ok": true
+    },
+    {
+      "descripcion": "El webhook deja el pago aprobado",
+      "ok": true
+    },
+    {
+      "descripcion": "Reserva pagada con método en_linea",
+      "ok": true
+    },
+    {
+      "descripcion": "Correo «Pago recibido» a la visitante",
+      "ok": true
+    }
+  ],
+  "fallidas": [],
+  "pasos_ejecutados": [
+    {
+      "peticion": "POST /api/pagos",
+      "usuario": "valentina.munoz@example.com",
+      "cuerpo": {
+        "reserva_id": 40
+      },
+      "cabeceras_extra": {},
+      "codigo": 201,
+      "respuesta": {
+        "id": 11,
+        "url_pago": "http://localhost:8180/pagos/11/simulado"
+      },
+      "nota": ""
+    },
+    {
+      "peticion": "POST /api/pagos/11/simular",
+      "usuario": "valentina.munoz@example.com",
+      "cuerpo": {
+        "aprobar": true
+      },
+      "cabeceras_extra": {},
+      "codigo": 200,
+      "respuesta": {
+        "id": 11,
+        "reserva_id": 40,
+        "reserva": {
+          "id": 40,
+          "experiencia_id": 47,
+          "experiencia": {
+            "id": 47,
+            "tipo": "senderismo",
+            "titulo": "Sendero al mirador del volcán Lanín",
+            "localidad": "Curarrehue",
+            "emprendimiento": {
+              "id": 13,
+              "nombre": "Refugio Rural Los Coigües",
+              "telefono_contacto": "+56955501001"
+            }
+          },
+          "fecha": "2026-11-21",
+          "noches": 1,
+          "fecha_salida": "2026-11-22",
+          "personas": 2,
+          "precio_por_persona": 25000.0,
+          "total": 50000.0,
+          "estado": "confirmada",
+          "metodo_pago": "transferencia",
+          "correo": "valentina.munoz@example.com",
+          "fecha_creacion": "2026-11-16T07:22:30.250581Z"
+        },
+        "proveedor": "simulado",
+        "monto": 50000.0,
+        "estado": "pendiente",
+        "fecha_creacion": "2026-11-16T07:24:09.099182Z"
+      },
+      "nota": ""
+    },
+    {
+      "peticion": "GET /api/pagos/11 (hasta que se resuelve)",
+      "usuario": "valentina.munoz@example.com",
+      "codigo": 200,
+      "respuesta": {
+        "id": 11,
+        "reserva_id": 40,
+        "reserva": {
+          "id": 40,
+          "experiencia_id": 47,
+          "experiencia": {
+            "id": 47,
+            "tipo": "senderismo",
+            "titulo": "Sendero al mirador del volcán Lanín",
+            "localidad": "Curarrehue",
+            "emprendimiento": {
+              "id": 13,
+              "nombre": "Refugio Rural Los Coigües",
+              "telefono_contacto": "+56955501001"
+            }
+          },
+          "fecha": "2026-11-21",
+          "noches": 1,
+          "fecha_salida": "2026-11-22",
+          "personas": 2,
+          "precio_por_persona": 25000.0,
+          "total": 50000.0,
+          "estado": "pagada",
+          "metodo_pago": "en_linea",
+          "correo": "valentina.munoz@example.com",
+          "fecha_creacion": "2026-11-16T07:22:30.250581Z"
+        },
+        "proveedor": "simulado",
+        "monto": 50000.0,
+        "estado": "aprobado",
+        "fecha_creacion": "2026-11-16T07:24:09.099182Z"
+      }
+    },
+    {
+      "consulta_bd": "Reserva y pago",
+      "sql": "SELECT r.estado, r.metodo_pago, p.estado FROM reservas r JOIN pagos p ON p.reserva_id = r.id WHERE p.id = 11",
+      "filas": [
+        [
+          "pagada",
+          "en_linea",
+          "aprobado"
+        ]
+      ]
+    }
+  ],
+  "ejecutado": "2026-11-16T04:24:15"
+}

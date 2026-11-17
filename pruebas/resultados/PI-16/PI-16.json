@@ -1,0 +1,110 @@
+{
+  "reserva": 27,
+  "pago": 14,
+  "pasos": [
+    [
+      "POST /api/pagos",
+      201,
+      {
+        "id": 14,
+        "url_pago": "http://localhost:8180/pagos/14/simulado"
+      }
+    ],
+    [
+      "POST /api/pagos/14/simular aprobar=true",
+      200,
+      "pendiente"
+    ],
+    [
+      "GET /api/pagos/14 tras 10 s",
+      200,
+      "pendiente"
+    ]
+  ],
+  "estado_final": "pendiente",
+  "reserva_estado": "confirmada",
+  "log_backend": [
+    "backend-1  | No se pudo avisar al webhook el resultado del pago simulado 14",
+    "backend-1  | ConnectionRefusedError: [Errno 111] Connection refused",
+    "backend-1  |     raise URLError(err)",
+    "backend-1  | urllib.error.URLError: <urlopen error [Errno 111] Connection refused>",
+    "backend-1  |     peticion_json(\"POST\", url_webhook(), cuerpo=cuerpo, cabeceras={CABECERA_FIRMA: firmar(cuerpo)})",
+    "backend-1  | app.pagos.base.ErrorProveedor: POST http://localhost:8100/pagos/webhook no respondió: <urlopen error [Errno 111] Connection refused>"
+  ],
+  "segunda_reproduccion": {
+    "pago": 15,
+    "estado_tras_10s": "pendiente",
+    "reserva": "confirmada"
+  },
+  "tercera_reproduccion": {
+    "fecha": "2026-11-17",
+    "reserva": 111,
+    "pago": 52,
+    "pasos": [
+      [
+        "POST /api/pagos",
+        201,
+        {
+          "id": 52,
+          "url_pago": "http://localhost:8180/pagos/52/simulado"
+        }
+      ],
+      [
+        "POST /api/pagos/52/simular aprobar=true",
+        200,
+        "pendiente"
+      ],
+      [
+        "GET /api/pagos/52 tras 10 s",
+        200,
+        "pendiente"
+      ]
+    ],
+    "estado_final": "pendiente",
+    "reserva_estado": "confirmada",
+    "log_backend": [
+      "backend-1  | No se pudo avisar al webhook el resultado del pago simulado 52",
+      "backend-1  | ConnectionRefusedError: [Errno 111] Connection refused",
+      "backend-1  |     raise URLError(err)",
+      "backend-1  | urllib.error.URLError: <urlopen error [Errno 111] Connection refused>",
+      "backend-1  |     peticion_json(\"POST\", url_webhook(), cuerpo=cuerpo, cabeceras={CABECERA_FIRMA: firmar(cuerpo)})",
+      "backend-1  |     raise ErrorProveedor(f\"{metodo} {url} no respondió: {e}\") from e",
+      "backend-1  | app.pagos.base.ErrorProveedor: POST http://localhost:8100/pagos/webhook no respondió: <urlopen error [Errno 111] Connection refused>"
+    ]
+  },
+  "verificacion_correccion": {
+    "fecha": "2026-11-17",
+    "correccion": "El proveedor simulado avisa a la propia API por su dirección interna (http://127.0.0.1:8000/pagos/webhook); BACKEND_URL solo la usan los proveedores externos",
+    "configuracion": "API_PORT=8100, BACKEND_URL=http://localhost:8100 (la misma que reproducía el bug)",
+    "reserva": 111,
+    "pago": 53,
+    "pasos": [
+      [
+        "POST /api/pagos",
+        201,
+        {
+          "id": 53,
+          "url_pago": "http://localhost:8180/pagos/53/simulado"
+        }
+      ],
+      [
+        "POST /api/pagos/53/simular aprobar=true",
+        200,
+        "pendiente"
+      ],
+      [
+        "GET /api/pagos/53 tras 10 s",
+        200,
+        "aprobado"
+      ]
+    ],
+    "estado_final": "aprobado",
+    "reserva_estado": "pagada",
+    "reserva_metodo_pago": "en_linea",
+    "log_backend": [
+      "backend-1  | INFO:     127.0.0.1:49390 - \"POST /pagos/webhook HTTP/1.1\" 200 OK"
+    ],
+    "regresion": "Suite PI-01 a PI-15 con el .env original: PASS 15 · FAIL 0 · BLOCKED 0 (resultados/2026-11-17_175557)",
+    "resultado": "BUG-01 corregido: el webhook llega y la reserva queda pagada"
+  }
+}

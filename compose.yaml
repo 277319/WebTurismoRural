@@ -33,7 +33,7 @@ services:
       SECRET_KEY: ${SECRET_KEY:-clave-de-desarrollo-cambiala-en-produccion}
       # Para los enlaces de los correos y las páginas de pago
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:${WEB_PORT:-8080}}
-      # Destino de los avisos de pago: el simulado se llama a sí mismo; Mercado Pago necesita una URL pública
+      # Destino de los avisos de Mercado Pago (URL pública); el simulado usa la dirección interna y no la lee
       BACKEND_URL: ${BACKEND_URL:-http://localhost:8000}
       MAIL_SERVER: ${MAIL_SERVER:-mailpit}
     ports:

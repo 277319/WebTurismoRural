@@ -1,0 +1,58 @@
+{
+  "id": "PI-04",
+  "flujo": "A",
+  "hu": "HU14",
+  "interfaces": "INT-02",
+  "prioridad": "Media",
+  "escenario": "Valor límite",
+  "objetivo": "Pedir un cupo más de los que quedan se rechaza sin sobreventa.",
+  "precondiciones": "PI-01 ejecutado (el día quedó con cupos libres menores que la capacidad).",
+  "datos": "Mismo día de PI-01; personas = cupos libres + 1.",
+  "pasos": "1. Consultar cupos libres (N). 2. POST /api/reservas con N + 1 personas. 3. Contar reservas y consultar cupos.",
+  "esperado": "HTTP 409 «Solo quedan N cupos para esta fecha»; no se crea reserva; los cupos no cambian.",
+  "evidencia": "Respuesta HTTP y cupos antes/después.",
+  "estado": "PASS",
+  "obtenido": "Quedaban 8 cupos y se pidieron 9: HTTP 409 «Solo quedan 8 cupos para esta fecha»; reservas 14 → 14; cupos 8 → 8.",
+  "verificaciones": [
+    {
+      "descripcion": "HTTP 409",
+      "ok": true
+    },
+    {
+      "descripcion": "Mensaje con los cupos que quedan",
+      "ok": true
+    },
+    {
+      "descripcion": "No se crea reserva",
+      "ok": true
+    },
+    {
+      "descripcion": "Los cupos no cambian",
+      "ok": true
+    }
+  ],
+  "fallidas": [],
+  "pasos_ejecutados": [
+    {
+      "peticion": "POST /api/reservas",
+      "usuario": "valentina.munoz@example.com",
+      "cuerpo": {
+        "experiencia_id": 162,
+        "fecha": "2026-11-21",
+        "personas": 9,
+        "metodo_pago": "transferencia",
+        "correo": "valentina.munoz@example.com"
+      },
+      "cabeceras_extra": {},
+      "codigo": 409,
+      "respuesta": {
+        "detail": {
+          "campo": "personas",
+          "mensaje": "Solo quedan 8 cupos para esta fecha"
+        }
+      },
+      "nota": ""
+    }
+  ],
+  "ejecutado": "2026-11-17T04:04:47"
+}

@@ -1,0 +1,105 @@
+{
+  "id": "PI-06",
+  "flujo": "A",
+  "hu": "HU01, HU14, HU15",
+  "interfaces": "INT-01",
+  "prioridad": "Alta",
+  "escenario": "Permisos",
+  "objetivo": "Solo usuarios autorizados pueden reservar y confirmar.",
+  "precondiciones": "PI-01 ejecutado (reserva pendiente de Rosa).",
+  "datos": "Sin token; Rosa (dueña); Valentina (visitante); Juan Carlos (otro anfitrión).",
+  "pasos": "1. POST /api/reservas sin token. 2. Rosa reserva su propio sendero. 3. Valentina y Juan Carlos intentan PATCH /confirmar. 4. Revisar la BD.",
+  "esperado": "401 sin sesión; 403 «No puedes reservar tu propia experiencia»; 403 para la visitante; 404 para el anfitrión ajeno; la reserva sigue pendiente.",
+  "evidencia": "Códigos HTTP y estado en la BD.",
+  "estado": "PASS",
+  "obtenido": "Sin sesión → 401; propia → 403 «No puedes reservar tu propia experiencia»; visitante confirma → 403; otro anfitrión → 404; reserva #110 sigue «pendiente».",
+  "verificaciones": [
+    {
+      "descripcion": "Sin sesión: HTTP 401",
+      "ok": true
+    },
+    {
+      "descripcion": "Reserva propia: HTTP 403 «No puedes reservar tu propia experiencia»",
+      "ok": true
+    },
+    {
+      "descripcion": "Visitante no puede confirmar: HTTP 403",
+      "ok": true
+    },
+    {
+      "descripcion": "Anfitrión ajeno no ve la reserva: HTTP 404",
+      "ok": true
+    },
+    {
+      "descripcion": "No se crean reservas",
+      "ok": true
+    },
+    {
+      "descripcion": "La reserva de PI-01 sigue pendiente",
+      "ok": true
+    }
+  ],
+  "fallidas": [],
+  "pasos_ejecutados": [
+    {
+      "peticion": "POST /api/reservas",
+      "usuario": "(sin sesión)",
+      "cuerpo": {
+        "experiencia_id": 162,
+        "fecha": "2026-11-21",
+        "personas": 1,
+        "metodo_pago": "transferencia",
+        "correo": "rosa.antinao@example.com"
+      },
+      "cabeceras_extra": {},
+      "codigo": 401,
+      "respuesta": {
+        "detail": "No autenticado o sesión expirada"
+      },
+      "nota": "sin token"
+    },
+    {
+      "peticion": "POST /api/reservas",
+      "usuario": "rosa.antinao@example.com",
+      "cuerpo": {
+        "experiencia_id": 162,
+        "fecha": "2026-11-21",
+        "personas": 1,
+        "metodo_pago": "transferencia",
+        "correo": "rosa.antinao@example.com"
+      },
+      "cabeceras_extra": {},
+      "codigo": 403,
+      "respuesta": {
+        "detail": {
+          "campo": "experiencia_id",
+          "mensaje": "No puedes reservar tu propia experiencia"
+        }
+      },
+      "nota": "la anfitriona reserva su propia experiencia"
+    },
+    {
+      "peticion": "PATCH /api/reservas/110/confirmar",
+      "usuario": "valentina.munoz@example.com",
+      "cuerpo": null,
+      "cabeceras_extra": {},
+      "codigo": 403,
+      "respuesta": {
+        "detail": "No tienes permiso para realizar esta acción"
+      },
+      "nota": "una visitante intenta confirmar"
+    },
+    {
+      "peticion": "PATCH /api/reservas/110/confirmar",
+      "usuario": "juancarlos.millalonco@example.com",
+      "cuerpo": null,
+      "cabeceras_extra": {},
+      "codigo": 404,
+      "respuesta": {
+        "detail": "Reserva no encontrada"
+      },
+      "nota": "otro anfitrión intenta confirmar"
+    }
+  ],
+  "ejecutado": "2026-11-17T04:05:20"
+}

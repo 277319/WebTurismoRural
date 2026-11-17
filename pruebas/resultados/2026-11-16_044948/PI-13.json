@@ -1,0 +1,93 @@
+{
+  "id": "PI-13",
+  "flujo": "B",
+  "hu": "HU16, HU13",
+  "interfaces": "INT-02, INT-04",
+  "prioridad": "Media",
+  "escenario": "Cancelación",
+  "objetivo": "Cancelar una reserva devuelve los cupos y no admite más cambios.",
+  "precondiciones": "Reserva de PI-01 activa (pagada tras PI-09).",
+  "datos": "Valentina; reserva de PI-01.",
+  "pasos": "1. Consultar cupos. 2. PATCH /cancelar como Valentina. 3. Consultar cupos. 4. Repetir. 5. Rosa intenta confirmarla.",
+  "esperado": "200 «cancelada»; cupos + 2; repetir da 409 «Esta reserva ya estaba cancelada»; confirmar da 409.",
+  "evidencia": "Respuestas HTTP y cupos antes/después.",
+  "estado": "PASS",
+  "obtenido": "Cancelar → 200 «cancelada»; cupos 8 → 10; repetir → 409; confirmar → 409 «Esta reserva ya estaba cancelada».",
+  "verificaciones": [
+    {
+      "descripcion": "HTTP 200 y estado cancelada",
+      "ok": true
+    },
+    {
+      "descripcion": "Cupos del día devueltos (+2)",
+      "ok": true
+    },
+    {
+      "descripcion": "Segunda cancelación: HTTP 409 «Esta reserva ya estaba cancelada»",
+      "ok": true
+    },
+    {
+      "descripcion": "No se puede confirmar una cancelada: HTTP 409",
+      "ok": true
+    }
+  ],
+  "fallidas": [],
+  "pasos_ejecutados": [
+    {
+      "peticion": "PATCH /api/reservas/68/cancelar",
+      "usuario": "valentina.munoz@example.com",
+      "cuerpo": null,
+      "cabeceras_extra": {},
+      "codigo": 200,
+      "respuesta": {
+        "id": 68,
+        "experiencia_id": 93,
+        "experiencia": {
+          "id": 93,
+          "tipo": "senderismo",
+          "titulo": "Sendero al mirador del volcán Lanín",
+          "localidad": "Curarrehue",
+          "emprendimiento": {
+            "id": 25,
+            "nombre": "Refugio Rural Los Coigües",
+            "telefono_contacto": "+56955501001"
+          }
+        },
+        "fecha": "2026-11-21",
+        "noches": 1,
+        "fecha_salida": "2026-11-22",
+        "personas": 2,
+        "precio_por_persona": 25000.0,
+        "total": 50000.0,
+        "estado": "cancelada",
+        "metodo_pago": "en_linea",
+        "correo": "valentina.munoz@example.com",
+        "fecha_creacion": "2026-11-16T07:49:57.942767Z"
+      },
+      "nota": ""
+    },
+    {
+      "peticion": "PATCH /api/reservas/68/cancelar",
+      "usuario": "valentina.munoz@example.com",
+      "cuerpo": null,
+      "cabeceras_extra": {},
+      "codigo": 409,
+      "respuesta": {
+        "detail": "Esta reserva ya estaba cancelada"
+      },
+      "nota": "segunda cancelación"
+    },
+    {
+      "peticion": "PATCH /api/reservas/68/confirmar",
+      "usuario": "rosa.antinao@example.com",
+      "cuerpo": null,
+      "cabeceras_extra": {},
+      "codigo": 409,
+      "respuesta": {
+        "detail": "Esta reserva ya estaba cancelada"
+      },
+      "nota": "la anfitriona intenta confirmarla"
+    }
+  ],
+  "ejecutado": "2026-11-16T04:52:37"
+}

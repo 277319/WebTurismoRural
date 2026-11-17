@@ -1,0 +1,310 @@
+{
+  "id": "PI-15",
+  "flujo": "—",
+  "hu": "HU10, HU11, HU21",
+  "interfaces": "INT-01",
+  "prioridad": "Baja",
+  "escenario": "Regresión",
+  "objetivo": "Tras los casos anteriores, la web, el proxy y el catálogo siguen funcionando.",
+  "precondiciones": "App en marcha.",
+  "datos": "Rutas /, /mis-reservas, /api/health, /api/docs; filtro localidad=Curarrehue.",
+  "pasos": "1. GET / y /mis-reservas en nginx. 2. GET /api/health y /api/docs. 3. GET /api/experiencias?localidad=Curarrehue.",
+  "esperado": "HTML de la SPA en ambas rutas; salud «ok» con la base conectada; Swagger 200; el filtro solo devuelve experiencias de Curarrehue.",
+  "evidencia": "Códigos HTTP, tipo de contenido y listado filtrado.",
+  "estado": "PASS",
+  "obtenido": "/ → 200; /mis-reservas → 200; /api/health → 200 {'status': 'ok', 'base_de_datos': 'conectada'}; /api/docs → 200; filtro Curarrehue → 6 experiencias, todas de Curarrehue: True.",
+  "verificaciones": [
+    {
+      "descripcion": "Inicio servido por nginx (HTML de la SPA)",
+      "ok": true
+    },
+    {
+      "descripcion": "Ruta interna /mis-reservas devuelve la SPA (no 404)",
+      "ok": true
+    },
+    {
+      "descripcion": "/api/health a través del proxy: base conectada",
+      "ok": true
+    },
+    {
+      "descripcion": "Swagger accesible en /api/docs",
+      "ok": true
+    },
+    {
+      "descripcion": "Filtro por localidad: solo Curarrehue",
+      "ok": true
+    }
+  ],
+  "fallidas": [],
+  "pasos_ejecutados": [
+    {
+      "peticion": "GET / (nginx)",
+      "codigo": 200,
+      "content_type": "text/html",
+      "respuesta": "<!doctype html>\n<html lang=\"es\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <link rel=\"icon\" type=\"image/svg+xml\" href=\"/"
+    },
+    {
+      "peticion": "GET /mis-reservas (nginx)",
+      "codigo": 200,
+      "content_type": "text/html",
+      "respuesta": "<!doctype html>\n<html lang=\"es\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <link rel=\"icon\" type=\"image/svg+xml\" href=\"/"
+    },
+    {
+      "peticion": "GET /api/health",
+      "usuario": "(sin sesión)",
+      "cuerpo": null,
+      "cabeceras_extra": {},
+      "codigo": 200,
+      "respuesta": {
+        "status": "ok",
+        "base_de_datos": "conectada"
+      },
+      "nota": ""
+    },
+    {
+      "peticion": "GET /api/docs (nginx)",
+      "codigo": 200,
+      "content_type": "text/html; charset=utf-8",
+      "respuesta": "\n    <!DOCTYPE html>\n    <html>\n    <head>\n    <link type=\"text/css\" rel=\"stylesheet\" href=\"https://cdn.jsdelivr.net/npm"
+    },
+    {
+      "peticion": "GET /api/experiencias?localidad=Curarrehue",
+      "usuario": "(sin sesión)",
+      "cuerpo": null,
+      "cabeceras_extra": {},
+      "codigo": 200,
+      "respuesta": {
+        "items": [
+          {
+            "id": 54,
+            "emprendimiento_id": 13,
+            "emprendimiento": {
+              "id": 13,
+              "nombre": "Refugio Rural Los Coigües",
+              "foto_url": "/uploads/emprendimientos/c1b3d0b215414993bcbb48a6e4bb2e26.webp"
+            },
+            "tipo": "hospedaje",
+            "titulo": "Cabaña junto al río Maichín",
+            "descripcion": "Cabaña de madera nativa para hasta cuatro personas, a pasos del río y rodeada de bosque. Tiene estufa a leña, cocina equipada y una terraza con vista al volcán Lanín.\n\nLlegada desde las 15:00 y salida hasta las 11:00.\nIncluye leña, ropa de cama y desayuno de campo con pan amasado.",
+            "precio_por_persona": 28000.0,
+            "capacidad_maxima": 4,
+            "localidad": "Curarrehue",
+            "latitud": -39.3567,
+            "longitud": -71.5915,
+            "estado": "activo",
+            "fotos": [
+              {
+                "id": 160,
+                "url": "/uploads/experiencias/d23c3e3140b841de94d3cb77a85a6961.webp",
+                "orden": 0
+              },
+              {
+                "id": 161,
+                "url": "/uploads/experiencias/eec3e60f853f4be2bf386d20a3f201f1.webp",
+                "orden": 1
+              },
+              {
+                "id": 162,
+                "url": "/uploads/experiencias/511b7271b177491fa4c84f60c8cd313f.webp",
+                "orden": 2
+              }
+            ],
+            "fecha_creacion": "2026-11-16T07:21:59.145641Z",
+            "fecha_actualizacion": "2026-11-16T07:21:59.145641Z"
+          },
+          {
+            "id": 51,
+            "emprendimiento_id": 13,
+            "emprendimiento": {
+              "id": 13,
+              "nombre": "Refugio Rural Los Coigües",
+              "foto_url": "/uploads/emprendimientos/c1b3d0b215414993bcbb48a6e4bb2e26.webp"
+            },
+            "tipo": "artesania",
+            "titulo": "Taller de telar mapuche",
+            "descripcion": "Doña Rosa enseña los primeros pasos del witral (telar mapuche): preparar la urdimbre, tejer una trarilonko (faja) sencilla y conocer el significado de sus diseños.\n\nDuración: 3 horas.\nIncluye materiales; te llevas tu tejido.",
+            "precio_por_persona": 22000.0,
+            "capacidad_maxima": 6,
+            "localidad": "Curarrehue",
+            "latitud": -39.3601,
+            "longitud": -71.5893,
+            "estado": "activo",
+            "fotos": [
+              {
+                "id": 151,
+                "url": "/uploads/experiencias/ae54cddaef7e4327a98003cdafde7f68.webp",
+                "orden": 0
+              },
+              {
+                "id": 152,
+                "url": "/uploads/experiencias/af90d8fdb58649c8b8942a66a141a48f.webp",
+                "orden": 1
+              },
+              {
+                "id": 153,
+                "url": "/uploads/experiencias/9e48858147cf4960927c1b94bcc39dc1.webp",
+                "orden": 2
+              }
+            ],
+            "fecha_creacion": "2026-11-16T07:21:59.145641Z",
+            "fecha_actualizacion": "2026-11-16T07:21:59.145641Z"
+          },
+          {
+            "id": 50,
+            "emprendimiento_id": 13,
+            "emprendimiento": {
+              "id": 13,
+              "nombre": "Refugio Rural Los Coigües",
+              "foto_url": "/uploads/emprendimientos/c1b3d0b215414993bcbb48a6e4bb2e26.webp"
+            },
+            "tipo": "agroturismo",
+            "titulo": "Un día en la huerta y el invernadero",
+            "descripcion": "Acompáñanos en las tareas de la mañana: cosechar, regar el invernadero y alimentar a las gallinas. Te llevas una bolsa con verduras de la temporada.\n\nIdeal para familias con niños.",
+            "precio_por_persona": 0.0,
+            "capacidad_maxima": 15,
+            "localidad": "Curarrehue",
+            "latitud": null,
+            "longitud": null,
+            "estado": "activo",
+            "fotos": [
+              {
+                "id": 148,
+                "url": "/uploads/experiencias/75fb02ef8ab64637af5ba79ae0d94a4a.webp",
+                "orden": 0
+              },
+              {
+                "id": 149,
+                "url": "/uploads/experiencias/8b06ecc8cc3e4c30a819d231ceb30e2c.webp",
+                "orden": 1
+              },
+              {
+                "id": 150,
+                "url": "/uploads/experiencias/2fb8478bc23040d485f563522c1f0d20.webp",
+                "orden": 2
+              }
+            ],
+            "fecha_creacion": "2026-11-16T07:21:59.145641Z",
+            "fecha_actualizacion": "2026-11-16T07:21:59.145641Z"
+          },
+          {
+            "id": 49,
+            "emprendimiento_id": 13,
+            "emprendimiento": {
+              "id": 13,
+              "nombre": "Refugio Rural Los Coigües",
+              "foto_url": "/uploads/emprendimientos/c1b3d0b215414993bcbb48a6e4bb2e26.webp"
+            },
+            "tipo": "gastronomia",
+            "titulo": "Cocina de fogón: catuto y sopaipillas",
+            "descripcion": "Aprende a preparar catuto (pan de trigo mote), sopaipillas y pebre en la cocina de fogón de la familia. Al final compartimos la mesa con lo que cocinamos.\n\nDuración: 2 horas y media.\nAvísanos si tienes alguna restricción alimentaria.",
+            "precio_por_persona": 18000.0,
+            "capacidad_maxima": 12,
+            "localidad": "Curarrehue",
+            "latitud": -39.3589,
+            "longitud": -71.5878,
+            "estado": "activo",
+            "fotos": [
+              {
+                "id": 145,
+                "url": "/uploads/experiencias/1fd1afd0a59b4db1972a80a63dedf0b2.webp",
+                "orden": 0
+              },
+              {
+                "id": 146,
+                "url": "/uploads/experiencias/735bcb568d09459dbe4db8ede571ade3.webp",
+                "orden": 1
+              },
+              {
+                "id": 147,
+                "url": "/uploads/experiencias/7f25852c2d2642f2a6f87c8a27dc7bca.webp",
+                "orden": 2
+              }
+            ],
+            "fecha_creacion": "2026-11-16T07:21:59.145641Z",
+            "fecha_actualizacion": "2026-11-16T07:21:59.145641Z"
+          },
+          {
+            "id": 48,
+            "emprendimiento_id": 13,
+            "emprendimiento": {
+              "id": 13,
+              "nombre": "Refugio Rural Los Coigües",
+              "foto_url": "/uploads/emprendimientos/c1b3d0b215414993bcbb48a6e4bb2e26.webp"
+            },
+            "tipo": "cabalgata",
+            "titulo": "Cabalgata por el valle del río Maichín",
+            "descripcion": "Recorrido a caballo por potreros y vados del río Maichín, con parada para tomar mate junto al fogón.\n\nNo se necesita experiencia: elegimos un caballo manso para cada visitante.\nEdad mínima: 8 años. Duración: 3 horas.",
+            "precio_por_persona": 35000.0,
+            "capacidad_maxima": 6,
+            "localidad": "Curarrehue",
+            "latitud": -39.3478,
+            "longitud": -71.5702,
+            "estado": "activo",
+            "fotos": [
+              {
+                "id": 142,
+                "url": "/uploads/experiencias/9c17787359064ba9985ef4badafe76f0.webp",
+                "orden": 0
+              },
+              {
+                "id": 143,
+                "url": "/uploads/experiencias/7feb3a7142214ad495e06fdb92a70445.webp",
+                "orden": 1
+              },
+              {
+                "id": 144,
+                "url": "/uploads/experiencias/66d9c56d6c1c449f92c88c89da84bc6c.webp",
+                "orden": 2
+              }
+            ],
+            "fecha_creacion": "2026-11-16T07:21:59.145641Z",
+            "fecha_actualizacion": "2026-11-16T07:21:59.145641Z"
+          },
+          {
+            "id": 47,
+            "emprendimiento_id": 13,
+            "emprendimiento": {
+              "id": 13,
+              "nombre": "Refugio Rural Los Coigües",
+              "foto_url": "/uploads/emprendimientos/c1b3d0b215414993bcbb48a6e4bb2e26.webp"
+            },
+            "tipo": "senderismo",
+            "titulo": "Sendero al mirador del volcán Lanín",
+            "descripcion": "Caminata de dificultad media por bosque de coigües y lengas hasta un mirador natural con vista al volcán Lanín.\n\nDuración: 5 horas (ida y vuelta).\nIncluye: guía local, colación y bastones.\nLleva: agua, cortaviento y protector solar.",
+            "precio_por_persona": 25000.0,
+            "capacidad_maxima": 10,
+            "localidad": "Curarrehue",
+            "latitud": -39.3712,
+            "longitud": -71.5541,
+            "estado": "activo",
+            "fotos": [
+              {
+                "id": 139,
+                "url": "/uploads/experiencias/c6ff0af9ca494e8aab0643d16ebcba0c.webp",
+                "orden": 0
+              },
+              {
+                "id": 140,
+                "url": "/uploads/experiencias/ffd04e28fc0b4dc59311a75d2701328e.webp",
+                "orden": 1
+              },
+              {
+                "id": 141,
+                "url": "/uploads/experiencias/7c2b71c98d874a4484c2286b53aeaa3b.webp",
+                "orden": 2
+              }
+            ],
+            "fecha_creacion": "2026-11-16T07:21:59.145641Z",
+            "fecha_actualizacion": "2026-11-16T07:21:59.145641Z"
+          }
+        ],
+        "total": 6,
+        "pagina": 1,
+        "por_pagina": 12,
+        "paginas": 1
+      },
+      "nota": ""
+    }
+  ],
+  "ejecutado": "2026-11-16T04:25:40"
+}

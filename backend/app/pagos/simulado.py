@@ -23,12 +23,14 @@ from app.pagos.base import (
     Notificacion,
     ProveedorPago,
     peticion_json,
-    url_webhook,
 )
 
 logger = logging.getLogger(__name__)
 
 CABECERA_FIRMA = "X-Firma-Simulada"
+# El aviso sale del mismo proceso que lo recibe: va directo a uvicorn por su dirección interna, que no
+# depende de BACKEND_URL ni del puerto publicado en el equipo (API_PORT)
+URL_WEBHOOK_INTERNO = "http://127.0.0.1:8000/pagos/webhook"
 
 
 def firmar(cuerpo: bytes) -> str:
@@ -67,6 +69,6 @@ class ProveedorSimulado(ProveedorPago):
             }
         ).encode()
         try:
-            peticion_json("POST", url_webhook(), cuerpo=cuerpo, cabeceras={CABECERA_FIRMA: firmar(cuerpo)})
+            peticion_json("POST", URL_WEBHOOK_INTERNO, cuerpo=cuerpo, cabeceras={CABECERA_FIRMA: firmar(cuerpo)})
         except ErrorProveedor:
             logger.exception("No se pudo avisar al webhook el resultado del pago simulado %s", pago_id)

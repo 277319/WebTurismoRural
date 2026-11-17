@@ -1,0 +1,91 @@
+{
+  "id": "PI-07",
+  "flujo": "B",
+  "hu": "HU15, HU17",
+  "interfaces": "INT-04, INT-03",
+  "prioridad": "Alta",
+  "escenario": "Operación válida + duplicado",
+  "objetivo": "La anfitriona confirma la solicitud, se avisa por correo y no se puede confirmar dos veces.",
+  "precondiciones": "Reserva de PI-01 en estado pendiente.",
+  "datos": "Rosa Antinao; reserva de PI-01.",
+  "pasos": "1. PATCH /api/reservas/{id}/confirmar como Rosa. 2. Revisar Mailpit. 3. Repetir el PATCH. 4. Consultar la BD.",
+  "esperado": "200 «confirmada»; correo «¡Tu reserva está confirmada!…» a la visitante; la repetición da 409 «Esta reserva ya estaba confirmada».",
+  "evidencia": "Respuestas HTTP, asunto en Mailpit y estado en la BD.",
+  "estado": "PASS",
+  "obtenido": "Confirmar → 200 «confirmada»; correo sí; repetir → 409 «Esta reserva ya estaba confirmada»; BD: confirmada.",
+  "verificaciones": [
+    {
+      "descripcion": "HTTP 200 y estado confirmada",
+      "ok": true
+    },
+    {
+      "descripcion": "Correo de confirmación a la visitante",
+      "ok": true
+    },
+    {
+      "descripcion": "Segunda confirmación: HTTP 409 «Esta reserva ya estaba confirmada»",
+      "ok": true
+    },
+    {
+      "descripcion": "En la base queda confirmada",
+      "ok": true
+    }
+  ],
+  "fallidas": [],
+  "pasos_ejecutados": [
+    {
+      "peticion": "PATCH /api/reservas/124/confirmar",
+      "usuario": "rosa.antinao@example.com",
+      "cuerpo": null,
+      "cabeceras_extra": {},
+      "codigo": 200,
+      "respuesta": {
+        "id": 124,
+        "experiencia_id": 185,
+        "experiencia": {
+          "id": 185,
+          "tipo": "senderismo",
+          "titulo": "Sendero al mirador del volcán Lanín",
+          "localidad": "Curarrehue",
+          "emprendimiento": {
+            "id": 49,
+            "nombre": "Refugio Rural Los Coigües",
+            "telefono_contacto": "+56955501001"
+          }
+        },
+        "fecha": "2026-11-21",
+        "noches": 1,
+        "fecha_salida": "2026-11-22",
+        "personas": 2,
+        "precio_por_persona": 25000.0,
+        "total": 50000.0,
+        "estado": "confirmada",
+        "metodo_pago": "transferencia",
+        "correo": "valentina.munoz@example.com",
+        "fecha_creacion": "2026-11-17T18:22:50.292377Z"
+      },
+      "nota": ""
+    },
+    {
+      "peticion": "PATCH /api/reservas/124/confirmar",
+      "usuario": "rosa.antinao@example.com",
+      "cuerpo": null,
+      "cabeceras_extra": {},
+      "codigo": 409,
+      "respuesta": {
+        "detail": "Esta reserva ya estaba confirmada"
+      },
+      "nota": "segunda confirmación"
+    },
+    {
+      "consulta_bd": "Estado guardado",
+      "sql": "SELECT estado FROM reservas WHERE id = 124",
+      "filas": [
+        [
+          "confirmada"
+        ]
+      ]
+    }
+  ],
+  "ejecutado": "2026-11-17T15:24:18"
+}

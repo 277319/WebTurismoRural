@@ -1,0 +1,215 @@
+{
+  "id": "PI-05",
+  "flujo": "A",
+  "hu": "HU14",
+  "interfaces": "INT-01",
+  "prioridad": "Alta",
+  "escenario": "Datos inválidos",
+  "objetivo": "El backend rechaza entradas inválidas con un mensaje comprensible y sin crear registros.",
+  "precondiciones": "PI-01 ejecutado (se reutiliza su experiencia y fecha).",
+  "datos": "Fecha 2020-01-01; sin método de pago; 0 personas; capacidad + 1; 2 noches; correo «no-es-un-correo»; experiencia 999999.",
+  "pasos": "1. Contar reservas. 2. Enviar POST /api/reservas con cada variante. 3. Volver a contar.",
+  "esperado": "422 con el mensaje de cada regla («Esa fecha ya pasó…», «Elige cómo vas a pagar», «admite hasta N personas», «se reserva por un solo día», errores de campo) y 404 para la experiencia inexistente; ninguna reserva nueva.",
+  "evidencia": "Código y mensaje de cada respuesta; conteo de la BD.",
+  "estado": "PASS",
+  "obtenido": "fecha pasada (2020-01-01) → 422; sin método de pago en experiencia con precio → 422; personas = 0 → 422; personas = capacidad + 1 (11) → 422; 2 noches en una experiencia que no es hospedaje → 422; correo con formato inválido → 422; experiencia inexistente (id 999999) → 404; reservas en BD 14 → 14.",
+  "verificaciones": [
+    {
+      "descripcion": "fecha pasada (2020-01-01): HTTP 422 con «Esa fecha ya pasó. Elige otra»",
+      "ok": true
+    },
+    {
+      "descripcion": "sin método de pago en experiencia con precio: HTTP 422 con «Elige cómo vas a pagar»",
+      "ok": true
+    },
+    {
+      "descripcion": "personas = 0: HTTP 422 con «personas»",
+      "ok": true
+    },
+    {
+      "descripcion": "personas = capacidad + 1 (11): HTTP 422 con «Esta experiencia admite hasta 10 personas»",
+      "ok": true
+    },
+    {
+      "descripcion": "2 noches en una experiencia que no es hospedaje: HTTP 422 con «Esta experiencia se reserva por un solo día»",
+      "ok": true
+    },
+    {
+      "descripcion": "correo con formato inválido: HTTP 422 con «correo»",
+      "ok": true
+    },
+    {
+      "descripcion": "experiencia inexistente (id 999999): HTTP 404 con «Esta experiencia no está disponible para reservar»",
+      "ok": true
+    },
+    {
+      "descripcion": "Ninguna variante crea reservas",
+      "ok": true
+    }
+  ],
+  "fallidas": [],
+  "pasos_ejecutados": [
+    {
+      "peticion": "POST /api/reservas",
+      "usuario": "valentina.munoz@example.com",
+      "cuerpo": {
+        "experiencia_id": 139,
+        "fecha": "2020-01-01",
+        "personas": 1,
+        "metodo_pago": "transferencia",
+        "correo": "valentina.munoz@example.com"
+      },
+      "cabeceras_extra": {},
+      "codigo": 422,
+      "respuesta": {
+        "detail": {
+          "campo": "fecha",
+          "mensaje": "Esa fecha ya pasó. Elige otra"
+        }
+      },
+      "nota": "fecha pasada (2020-01-01)"
+    },
+    {
+      "peticion": "POST /api/reservas",
+      "usuario": "valentina.munoz@example.com",
+      "cuerpo": {
+        "experiencia_id": 139,
+        "fecha": "2026-11-21",
+        "personas": 1,
+        "metodo_pago": null,
+        "correo": "valentina.munoz@example.com"
+      },
+      "cabeceras_extra": {},
+      "codigo": 422,
+      "respuesta": {
+        "detail": {
+          "campo": "metodo_pago",
+          "mensaje": "Elige cómo vas a pagar"
+        }
+      },
+      "nota": "sin método de pago en experiencia con precio"
+    },
+    {
+      "peticion": "POST /api/reservas",
+      "usuario": "valentina.munoz@example.com",
+      "cuerpo": {
+        "experiencia_id": 139,
+        "fecha": "2026-11-21",
+        "personas": 0,
+        "metodo_pago": "transferencia",
+        "correo": "valentina.munoz@example.com"
+      },
+      "cabeceras_extra": {},
+      "codigo": 422,
+      "respuesta": {
+        "detail": [
+          {
+            "type": "greater_than_equal",
+            "loc": [
+              "body",
+              "personas"
+            ],
+            "msg": "Input should be greater than or equal to 1",
+            "input": 0,
+            "ctx": {
+              "ge": 1
+            }
+          }
+        ]
+      },
+      "nota": "personas = 0"
+    },
+    {
+      "peticion": "POST /api/reservas",
+      "usuario": "valentina.munoz@example.com",
+      "cuerpo": {
+        "experiencia_id": 139,
+        "fecha": "2026-11-21",
+        "personas": 11,
+        "metodo_pago": "transferencia",
+        "correo": "valentina.munoz@example.com"
+      },
+      "cabeceras_extra": {},
+      "codigo": 422,
+      "respuesta": {
+        "detail": {
+          "campo": "personas",
+          "mensaje": "Esta experiencia admite hasta 10 personas por salida"
+        }
+      },
+      "nota": "personas = capacidad + 1 (11)"
+    },
+    {
+      "peticion": "POST /api/reservas",
+      "usuario": "valentina.munoz@example.com",
+      "cuerpo": {
+        "experiencia_id": 139,
+        "fecha": "2026-11-21",
+        "personas": 1,
+        "metodo_pago": "transferencia",
+        "correo": "valentina.munoz@example.com",
+        "noches": 2
+      },
+      "cabeceras_extra": {},
+      "codigo": 422,
+      "respuesta": {
+        "detail": {
+          "campo": "noches",
+          "mensaje": "Esta experiencia se reserva por un solo día"
+        }
+      },
+      "nota": "2 noches en una experiencia que no es hospedaje"
+    },
+    {
+      "peticion": "POST /api/reservas",
+      "usuario": "valentina.munoz@example.com",
+      "cuerpo": {
+        "experiencia_id": 139,
+        "fecha": "2026-11-21",
+        "personas": 1,
+        "metodo_pago": "transferencia",
+        "correo": "no-es-un-correo"
+      },
+      "cabeceras_extra": {},
+      "codigo": 422,
+      "respuesta": {
+        "detail": [
+          {
+            "type": "value_error",
+            "loc": [
+              "body",
+              "correo"
+            ],
+            "msg": "value is not a valid email address: An email address must have an @-sign.",
+            "input": "no-es-un-correo",
+            "ctx": {
+              "reason": "An email address must have an @-sign."
+            }
+          }
+        ]
+      },
+      "nota": "correo con formato inválido"
+    },
+    {
+      "peticion": "POST /api/reservas",
+      "usuario": "valentina.munoz@example.com",
+      "cuerpo": {
+        "experiencia_id": 999999,
+        "fecha": "2026-11-21",
+        "personas": 1,
+        "metodo_pago": "transferencia",
+        "correo": "valentina.munoz@example.com"
+      },
+      "cabeceras_extra": {},
+      "codigo": 404,
+      "respuesta": {
+        "detail": {
+          "campo": "experiencia_id",
+          "mensaje": "Esta experiencia no está disponible para reservar"
+        }
+      },
+      "nota": "experiencia inexistente (id 999999)"
+    }
+  ],
+  "ejecutado": "2026-11-17T03:49:25"
+}

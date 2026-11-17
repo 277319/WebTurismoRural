@@ -1,0 +1,275 @@
+{
+  "id": "PI-14",
+  "flujo": "—",
+  "hu": "HU01, HU03",
+  "interfaces": "INT-06",
+  "prioridad": "Media",
+  "escenario": "Datos inválidos + duplicado",
+  "objetivo": "El registro valida las entradas, evita duplicados y guarda la contraseña cifrada.",
+  "precondiciones": "Ninguna cuenta prueba.s13.*@example.com (se borran al restablecer).",
+  "datos": "Correo de Camila (duplicado); contraseñas «solamenteletras» y «abc1234»; sin nombre; sin correo ni teléfono; rol admin; cuenta nueva prueba.s13.<n>@example.com.",
+  "pasos": "1. POST /api/auth/registro con cada variante. 2. Registro válido. 3. Login con el correo en mayúsculas y GET /api/auth/me. 4. Consultar la BD.",
+  "esperado": "409 para el duplicado y 422 con su mensaje para el resto, sin crear la cuenta; el registro válido da 201 como visitante, el login funciona y la contraseña queda como hash bcrypt.",
+  "evidencia": "Respuestas HTTP y fila de usuarios.",
+  "estado": "PASS",
+  "obtenido": "6 entradas inválidas rechazadas como se esperaba salvo las marcadas; registro válido → 201; login → 200; BD: ['visitante', 'Prueba Semana 13'], hash bcrypt sí.",
+  "verificaciones": [
+    {
+      "descripcion": "correo ya registrado: HTTP 409 con «Este correo ya está registrado»",
+      "ok": true
+    },
+    {
+      "descripcion": "contraseña sin números: HTTP 422 con «letras y números»",
+      "ok": true
+    },
+    {
+      "descripcion": "contraseña de 7 caracteres: HTTP 422 con «contrasena»",
+      "ok": true
+    },
+    {
+      "descripcion": "visitante sin nombre: HTTP 422 con «Ingresa tu nombre»",
+      "ok": true
+    },
+    {
+      "descripcion": "sin correo ni teléfono: HTTP 422 con «Debes indicar un correo o un teléfono»",
+      "ok": true
+    },
+    {
+      "descripcion": "intento de registrarse como admin: HTTP 422 con «rol»",
+      "ok": true
+    },
+    {
+      "descripcion": "Los intentos fallidos no crean la cuenta",
+      "ok": true
+    },
+    {
+      "descripcion": "Registro válido: HTTP 201 como visitante",
+      "ok": true
+    },
+    {
+      "descripcion": "Inicia sesión y /auth/me devuelve la cuenta",
+      "ok": true
+    },
+    {
+      "descripcion": "Una fila con la contraseña guardada como hash bcrypt",
+      "ok": true
+    }
+  ],
+  "fallidas": [],
+  "pasos_ejecutados": [
+    {
+      "peticion": "POST /api/auth/registro",
+      "usuario": "(sin sesión)",
+      "cuerpo": {
+        "correo": "camila.rojas@example.com",
+        "contrasena": "Prueba2026",
+        "nombre": "Prueba"
+      },
+      "cabeceras_extra": {},
+      "codigo": 409,
+      "respuesta": {
+        "detail": {
+          "campo": "correo",
+          "mensaje": "Este correo ya está registrado"
+        }
+      },
+      "nota": "correo ya registrado"
+    },
+    {
+      "peticion": "POST /api/auth/registro",
+      "usuario": "(sin sesión)",
+      "cuerpo": {
+        "correo": "prueba.s13.1794815557@example.com",
+        "contrasena": "solamenteletras",
+        "nombre": "Prueba"
+      },
+      "cabeceras_extra": {},
+      "codigo": 422,
+      "respuesta": {
+        "detail": [
+          {
+            "type": "value_error",
+            "loc": [
+              "body",
+              "contrasena"
+            ],
+            "msg": "Value error, La contraseña debe contener letras y números",
+            "input": "solamenteletras",
+            "ctx": {
+              "error": {}
+            }
+          }
+        ]
+      },
+      "nota": "contraseña sin números"
+    },
+    {
+      "peticion": "POST /api/auth/registro",
+      "usuario": "(sin sesión)",
+      "cuerpo": {
+        "correo": "prueba.s13.1794815557@example.com",
+        "contrasena": "abc1234",
+        "nombre": "Prueba"
+      },
+      "cabeceras_extra": {},
+      "codigo": 422,
+      "respuesta": {
+        "detail": [
+          {
+            "type": "string_too_short",
+            "loc": [
+              "body",
+              "contrasena"
+            ],
+            "msg": "String should have at least 8 characters",
+            "input": "abc1234",
+            "ctx": {
+              "min_length": 8
+            }
+          }
+        ]
+      },
+      "nota": "contraseña de 7 caracteres"
+    },
+    {
+      "peticion": "POST /api/auth/registro",
+      "usuario": "(sin sesión)",
+      "cuerpo": {
+        "correo": "prueba.s13.1794815557@example.com",
+        "contrasena": "Prueba2026"
+      },
+      "cabeceras_extra": {},
+      "codigo": 422,
+      "respuesta": {
+        "detail": [
+          {
+            "type": "value_error",
+            "loc": [
+              "body",
+              "nombre"
+            ],
+            "msg": "Value error, Ingresa tu nombre",
+            "input": null,
+            "ctx": {
+              "error": {}
+            }
+          }
+        ]
+      },
+      "nota": "visitante sin nombre"
+    },
+    {
+      "peticion": "POST /api/auth/registro",
+      "usuario": "(sin sesión)",
+      "cuerpo": {
+        "contrasena": "Prueba2026",
+        "nombre": "Prueba"
+      },
+      "cabeceras_extra": {},
+      "codigo": 422,
+      "respuesta": {
+        "detail": [
+          {
+            "type": "value_error",
+            "loc": [
+              "body"
+            ],
+            "msg": "Value error, Debes indicar un correo o un teléfono",
+            "input": {
+              "contrasena": "Prueba2026",
+              "nombre": "Prueba"
+            },
+            "ctx": {
+              "error": {}
+            }
+          }
+        ]
+      },
+      "nota": "sin correo ni teléfono"
+    },
+    {
+      "peticion": "POST /api/auth/registro",
+      "usuario": "(sin sesión)",
+      "cuerpo": {
+        "correo": "prueba.s13.1794815557@example.com",
+        "contrasena": "Prueba2026",
+        "nombre": "Prueba",
+        "rol": "admin"
+      },
+      "cabeceras_extra": {},
+      "codigo": 422,
+      "respuesta": {
+        "detail": [
+          {
+            "type": "literal_error",
+            "loc": [
+              "body",
+              "rol"
+            ],
+            "msg": "Input should be 'visitante' or 'anfitrion'",
+            "input": "admin",
+            "ctx": {
+              "expected": "'visitante' or 'anfitrion'"
+            }
+          }
+        ]
+      },
+      "nota": "intento de registrarse como admin"
+    },
+    {
+      "peticion": "POST /api/auth/registro",
+      "usuario": "(sin sesión)",
+      "cuerpo": {
+        "correo": "prueba.s13.1794815557@example.com",
+        "contrasena": "Prueba2026",
+        "nombre": "Prueba Semana 13"
+      },
+      "cabeceras_extra": {},
+      "codigo": 201,
+      "respuesta": {
+        "id": 48,
+        "nombre": "Prueba Semana 13",
+        "correo": "prueba.s13.1794815557@example.com",
+        "telefono": null,
+        "rol": "visitante",
+        "fecha_creacion": "2026-11-16T07:52:51.713560Z"
+      },
+      "nota": "registro válido"
+    },
+    {
+      "peticion": "POST /api/auth/login",
+      "usuario": "(sin sesión)",
+      "cuerpo": {
+        "identificador": "PRUEBA.S13.1794815557@EXAMPLE.COM",
+        "contrasena": "Prueba2026"
+      },
+      "cabeceras_extra": {},
+      "codigo": 200,
+      "respuesta": {
+        "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI0OCIsImV4cCI6MTc5NDgxOTE3NH0.NcHdyEMq736WAUZ5QrcplHvg3hB5-KAhQIj1EEHgMII",
+        "token_type": "bearer",
+        "usuario": {
+          "id": 48,
+          "nombre": "Prueba Semana 13",
+          "correo": "prueba.s13.1794815557@example.com",
+          "telefono": null,
+          "rol": "visitante",
+          "fecha_creacion": "2026-11-16T07:52:51.713560Z"
+        }
+      },
+      "nota": "login con el correo en mayúsculas"
+    },
+    {
+      "consulta_bd": "Cuenta creada",
+      "sql": "SELECT rol, nombre, contrasena_hash LIKE '$2%' FROM usuarios WHERE correo = 'prueba.s13.1794815557@example.com'",
+      "filas": [
+        [
+          "visitante",
+          "Prueba Semana 13",
+          "t"
+        ]
+      ]
+    }
+  ],
+  "ejecutado": "2026-11-16T04:52:56"
+}
