@@ -40,8 +40,8 @@ class Settings(BaseSettings):
     # "simulado": pasarela de prueba propia, sin dinero real ni cuentas externas.
     # "mercadopago": Checkout Pro de Mercado Pago (con credenciales de prueba, en su sandbox)
     PROVEEDOR_PAGO: Literal["simulado", "mercadopago"] = "simulado"
-    # Dirección del backend a la que el proveedor envía sus avisos (webhook). Mercado Pago necesita
-    # una URL accesible desde internet: en desarrollo, un túnel como ngrok
+    # Dirección del backend a la que un proveedor externo envía sus avisos (webhook). Mercado Pago necesita
+    # una URL accesible desde internet: en desarrollo, un túnel como ngrok. El simulado no la usa
     BACKEND_URL: str = "http://localhost:8000"
     # Access token de la cuenta vendedora (Tus integraciones > Credenciales)
     MP_ACCESS_TOKEN: str = ""

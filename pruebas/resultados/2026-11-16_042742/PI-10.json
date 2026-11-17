@@ -1,0 +1,142 @@
+{
+  "id": "PI-10",
+  "flujo": "B",
+  "hu": "HU18",
+  "interfaces": "INT-05",
+  "prioridad": "Media",
+  "escenario": "Pago rechazado",
+  "objetivo": "Un pago rechazado no cambia la reserva ni envía comprobante.",
+  "precondiciones": "Reserva confirmada de Camila Rojas en la cabalgata (datos_demo).",
+  "datos": "Camila (camila.rojas@example.com); «Cabalgata por el valle del río Maichín».",
+  "pasos": "1. POST /api/pagos. 2. POST /simular {aprobar: false}. 3. Consultar el pago. 4. Revisar la BD y Mailpit.",
+  "esperado": "Pago «rechazado»; la reserva sigue «confirmada»; no llega correo «Pago recibido».",
+  "evidencia": "Estado del pago, fila de la reserva y conteo de correos.",
+  "estado": "PASS",
+  "obtenido": "Reserva #41: pago #20 → rechazado; reserva sigue «confirmada»; correos de pago nuevos: 0.",
+  "verificaciones": [
+    {
+      "descripcion": "HTTP 201 al iniciar el pago",
+      "ok": true
+    },
+    {
+      "descripcion": "El webhook deja el pago rechazado",
+      "ok": true
+    },
+    {
+      "descripcion": "La reserva sigue confirmada",
+      "ok": true
+    },
+    {
+      "descripcion": "No se envía correo de pago",
+      "ok": true
+    }
+  ],
+  "fallidas": [],
+  "pasos_ejecutados": [
+    {
+      "peticion": "POST /api/pagos",
+      "usuario": "camila.rojas@example.com",
+      "cuerpo": {
+        "reserva_id": 41
+      },
+      "cabeceras_extra": {},
+      "codigo": 201,
+      "respuesta": {
+        "id": 20,
+        "url_pago": "http://localhost:8180/pagos/20/simulado"
+      },
+      "nota": ""
+    },
+    {
+      "peticion": "POST /api/pagos/20/simular",
+      "usuario": "camila.rojas@example.com",
+      "cuerpo": {
+        "aprobar": false
+      },
+      "cabeceras_extra": {},
+      "codigo": 200,
+      "respuesta": {
+        "id": 20,
+        "reserva_id": 41,
+        "reserva": {
+          "id": 41,
+          "experiencia_id": 71,
+          "experiencia": {
+            "id": 71,
+            "tipo": "cabalgata",
+            "titulo": "Cabalgata por el valle del río Maichín",
+            "localidad": "Curarrehue",
+            "emprendimiento": {
+              "id": 19,
+              "nombre": "Refugio Rural Los Coigües",
+              "telefono_contacto": "+56955501001"
+            }
+          },
+          "fecha": "2026-11-19",
+          "noches": 1,
+          "fecha_salida": "2026-11-20",
+          "personas": 2,
+          "precio_por_persona": 35000.0,
+          "total": 70000.0,
+          "estado": "confirmada",
+          "metodo_pago": "transferencia",
+          "correo": "camila.rojas@example.com",
+          "fecha_creacion": "2026-11-05T12:00:00Z"
+        },
+        "proveedor": "simulado",
+        "monto": 70000.0,
+        "estado": "pendiente",
+        "fecha_creacion": "2026-11-16T07:29:43.235162Z"
+      },
+      "nota": ""
+    },
+    {
+      "peticion": "GET /api/pagos/20 (hasta que se resuelve)",
+      "usuario": "camila.rojas@example.com",
+      "codigo": 200,
+      "respuesta": {
+        "id": 20,
+        "reserva_id": 41,
+        "reserva": {
+          "id": 41,
+          "experiencia_id": 71,
+          "experiencia": {
+            "id": 71,
+            "tipo": "cabalgata",
+            "titulo": "Cabalgata por el valle del río Maichín",
+            "localidad": "Curarrehue",
+            "emprendimiento": {
+              "id": 19,
+              "nombre": "Refugio Rural Los Coigües",
+              "telefono_contacto": "+56955501001"
+            }
+          },
+          "fecha": "2026-11-19",
+          "noches": 1,
+          "fecha_salida": "2026-11-20",
+          "personas": 2,
+          "precio_por_persona": 35000.0,
+          "total": 70000.0,
+          "estado": "confirmada",
+          "metodo_pago": "transferencia",
+          "correo": "camila.rojas@example.com",
+          "fecha_creacion": "2026-11-05T12:00:00Z"
+        },
+        "proveedor": "simulado",
+        "monto": 70000.0,
+        "estado": "rechazado",
+        "fecha_creacion": "2026-11-16T07:29:43.235162Z"
+      }
+    },
+    {
+      "consulta_bd": "Estado de la reserva",
+      "sql": "SELECT estado FROM reservas WHERE id = 41",
+      "filas": [
+        [
+          "confirmada"
+        ]
+      ]
+    }
+  ],
+  "ejecutado": "2026-11-16T04:29:51"
+}

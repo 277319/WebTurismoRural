@@ -1,0 +1,2073 @@
+{
+  "entorno": {
+    "fecha": "2026-11-17T15:22:37",
+    "rama": "pruebas/matriz-validacion",
+    "commit": "e184e6f",
+    "commit_mensaje": "Merge pull request #8 from 277319/despliegue-docker",
+    "docker": "29.8.1",
+    "compose": "5.5.1",
+    "web": "http://localhost:8180",
+    "mailpit": "http://localhost:8125",
+    "contenedores": [
+      "backend: Up 3 minutes (healthy)",
+      "db: Up 3 minutes (healthy)",
+      "mailpit: Up 3 minutes (healthy)",
+      "nginx: Up 3 minutes"
+    ]
+  },
+  "totales": {
+    "PASS": 15,
+    "FAIL": 0,
+    "BLOCKED": 0,
+    "NOT RUN": 0
+  },
+  "casos": [
+    {
+      "id": "PI-01",
+      "flujo": "A",
+      "hu": "HU14, HU13, HU17",
+      "interfaces": "INT-01, INT-02, INT-03",
+      "prioridad": "Alta",
+      "escenario": "Operación válida",
+      "objetivo": "Una solicitud de reserva válida se guarda, descuenta cupos y avisa por correo.",
+      "precondiciones": "Datos de datos_demo; Valentina Muñoz sin reservas en el sendero; el sendero tiene un día con 3 o más cupos.",
+      "datos": "Valentina Muñoz (valentina.munoz@example.com); «Sendero al mirador del volcán Lanín»; primer día con ≥3 cupos; 2 personas; transferencia.",
+      "pasos": "1. Iniciar sesión como Valentina. 2. Consultar cupos del día (GET /api/experiencias/{id}/disponibilidad). 3. POST /api/reservas. 4. Volver a consultar cupos. 5. Consultar la fila en reservas. 6. Revisar Mailpit.",
+      "esperado": "HTTP 201, estado «pendiente», total = precio × 2; cupos del día bajan en 2; una fila nueva en reservas; correo «Recibimos tu solicitud…» a la visitante y «Nueva solicitud de reserva…» a la anfitriona.",
+      "evidencia": "Respuesta HTTP, cupos antes/después, fila de la BD y asuntos de Mailpit.",
+      "estado": "PASS",
+      "obtenido": "HTTP 201, reserva #124 pendiente, total 50000 (25000 × 2); cupos del 2026-11-21: 10 → 8; fila en BD = ['pendiente', '2', '50000.00']; correos en Mailpit: visitante sí, anfitriona sí.",
+      "verificaciones": [
+        {
+          "descripcion": "HTTP 201",
+          "ok": true
+        },
+        {
+          "descripcion": "Estado pendiente",
+          "ok": true
+        },
+        {
+          "descripcion": "Total = precio × 2",
+          "ok": true
+        },
+        {
+          "descripcion": "Cupos del día descontados en 2",
+          "ok": true
+        },
+        {
+          "descripcion": "Fila en reservas con estado pendiente",
+          "ok": true
+        },
+        {
+          "descripcion": "Una reserva más en la base",
+          "ok": true
+        },
+        {
+          "descripcion": "Correo de acuse a la visitante",
+          "ok": true
+        },
+        {
+          "descripcion": "Correo de aviso a la anfitriona",
+          "ok": true
+        }
+      ],
+      "fallidas": [],
+      "pasos_ejecutados": [
+        {
+          "peticion": "GET /api/experiencias/185",
+          "usuario": "(sin sesión)",
+          "cuerpo": null,
+          "cabeceras_extra": {},
+          "codigo": 200,
+          "respuesta": {
+            "id": 185,
+            "emprendimiento_id": 49,
+            "emprendimiento": {
+              "id": 49,
+              "nombre": "Refugio Rural Los Coigües",
+              "localidad": "Curarrehue",
+              "descripcion": "Refugio familiar a orillas del río Maichín, rodeado de bosque nativo y con vista al volcán Lanín. Recibimos grupos pequeños para compartir el día a día del campo: la huerta, los animales, la cocina de fogón y los senderos que conocemos desde niños.",
+              "telefono_contacto": "+56955501001",
+              "redes": {
+                "whatsapp": "+56912345678",
+                "instagram": "refugioloscoigues"
+              },
+              "usuario_id": 79,
+              "foto_url": "/uploads/emprendimientos/b3c978148e604330ade9b2320c20ac29.webp"
+            },
+            "tipo": "senderismo",
+            "titulo": "Sendero al mirador del volcán Lanín",
+            "descripcion": "Caminata de dificultad media por bosque de coigües y lengas hasta un mirador natural con vista al volcán Lanín.\n\nDuración: 5 horas (ida y vuelta).\nIncluye: guía local, colación y bastones.\nLleva: agua, cortaviento y protector solar.",
+            "precio_por_persona": 25000.0,
+            "capacidad_maxima": 10,
+            "localidad": "Curarrehue",
+            "latitud": -39.3712,
+            "longitud": -71.5541,
+            "estado": "activo",
+            "fotos": [
+              {
+                "id": 553,
+                "url": "/uploads/experiencias/3ddbe493c5e043348068efb625a42927.webp",
+                "orden": 0
+              },
+              {
+                "id": 554,
+                "url": "/uploads/experiencias/b454dd79da7b41e59fe987ab81215899.webp",
+                "orden": 1
+              },
+              {
+                "id": 555,
+                "url": "/uploads/experiencias/4aca9e361e34443a99bdd0618610972c.webp",
+                "orden": 2
+              }
+            ],
+            "fecha_creacion": "2026-11-17T18:21:49.514028Z",
+            "fecha_actualizacion": "2026-11-17T18:21:49.514028Z"
+          },
+          "nota": ""
+        },
+        {
+          "peticion": "POST /api/reservas",
+          "usuario": "valentina.munoz@example.com",
+          "cuerpo": {
+            "experiencia_id": 185,
+            "fecha": "2026-11-21",
+            "personas": 2,
+            "metodo_pago": "transferencia",
+            "correo": "valentina.munoz@example.com"
+          },
+          "cabeceras_extra": {},
+          "codigo": 201,
+          "respuesta": {
+            "id": 124,
+            "experiencia_id": 185,
+            "experiencia": {
+              "id": 185,
+              "tipo": "senderismo",
+              "titulo": "Sendero al mirador del volcán Lanín",
+              "localidad": "Curarrehue",
+              "emprendimiento": {
+                "id": 49,
+                "nombre": "Refugio Rural Los Coigües",
+                "telefono_contacto": "+56955501001"
+              }
+            },
+            "fecha": "2026-11-21",
+            "noches": 1,
+            "fecha_salida": "2026-11-22",
+            "personas": 2,
+            "precio_por_persona": 25000.0,
+            "total": 50000.0,
+            "estado": "pendiente",
+            "metodo_pago": "transferencia",
+            "correo": "valentina.munoz@example.com",
+            "fecha_creacion": "2026-11-17T18:22:50.292377Z"
+          },
+          "nota": ""
+        },
+        {
+          "consulta_bd": "Reserva guardada",
+          "sql": "SELECT estado, personas, total FROM reservas WHERE id = 124",
+          "filas": [
+            [
+              "pendiente",
+              "2",
+              "50000.00"
+            ]
+          ]
+        }
+      ],
+      "ejecutado": "2026-11-17T15:22:57"
+    },
+    {
+      "id": "PI-02",
+      "flujo": "A",
+      "hu": "HU16, HU15",
+      "interfaces": "INT-01, INT-02",
+      "prioridad": "Media",
+      "escenario": "Consistencia",
+      "objetivo": "La reserva creada aparece una sola vez para la visitante y la anfitriona la ve.",
+      "precondiciones": "PI-01 ejecutado con PASS.",
+      "datos": "Reserva creada en PI-01.",
+      "pasos": "1. GET /api/reservas/mias como Valentina. 2. GET /api/experiencias/{id}/reservas como Rosa. 3. Contar filas en la BD.",
+      "esperado": "La reserva aparece exactamente 1 vez en Mis reservas; la anfitriona la ve «pendiente» con el nombre «Valentina Muñoz»; 1 fila en la BD.",
+      "evidencia": "Listados HTTP y conteo en la BD.",
+      "estado": "PASS",
+      "obtenido": "Mis reservas: 1 vez; anfitriona: pendiente, Valentina Muñoz; filas en BD: 1.",
+      "verificaciones": [
+        {
+          "descripcion": "Aparece exactamente una vez en Mis reservas",
+          "ok": true
+        },
+        {
+          "descripcion": "La anfitriona la ve pendiente con el nombre de la visitante",
+          "ok": true
+        },
+        {
+          "descripcion": "Una sola fila en la base",
+          "ok": true
+        }
+      ],
+      "fallidas": [],
+      "pasos_ejecutados": [
+        {
+          "peticion": "GET /api/reservas/mias",
+          "usuario": "valentina.munoz@example.com",
+          "cuerpo": null,
+          "cabeceras_extra": {},
+          "codigo": 200,
+          "respuesta": [
+            {
+              "id": 124,
+              "experiencia_id": 185,
+              "experiencia": {
+                "id": 185,
+                "tipo": "senderismo",
+                "titulo": "Sendero al mirador del volcán Lanín",
+                "localidad": "Curarrehue",
+                "emprendimiento": {
+                  "id": 49,
+                  "nombre": "Refugio Rural Los Coigües",
+                  "telefono_contacto": "+56955501001"
+                }
+              },
+              "fecha": "2026-11-21",
+              "noches": 1,
+              "fecha_salida": "2026-11-22",
+              "personas": 2,
+              "precio_por_persona": 25000.0,
+              "total": 50000.0,
+              "estado": "pendiente",
+              "metodo_pago": "transferencia",
+              "correo": "valentina.munoz@example.com",
+              "fecha_creacion": "2026-11-17T18:22:50.292377Z"
+            }
+          ],
+          "nota": ""
+        },
+        {
+          "peticion": "GET /api/experiencias/185/reservas",
+          "usuario": "rosa.antinao@example.com",
+          "cuerpo": null,
+          "cabeceras_extra": {},
+          "codigo": 200,
+          "respuesta": [
+            {
+              "id": 114,
+              "experiencia_id": 185,
+              "experiencia": {
+                "id": 185,
+                "tipo": "senderismo",
+                "titulo": "Sendero al mirador del volcán Lanín",
+                "localidad": "Curarrehue",
+                "emprendimiento": {
+                  "id": 49,
+                  "nombre": "Refugio Rural Los Coigües",
+                  "telefono_contacto": "+56955501001"
+                }
+              },
+              "fecha": "2026-10-28",
+              "noches": 1,
+              "fecha_salida": "2026-10-29",
+              "personas": 2,
+              "precio_por_persona": 25000.0,
+              "total": 50000.0,
+              "estado": "pagada",
+              "metodo_pago": "efectivo",
+              "correo": "camila.rojas@example.com",
+              "fecha_creacion": "2026-10-14T12:00:00Z",
+              "visitante": {
+                "id": 84,
+                "nombre": "Camila Rojas",
+                "correo": "camila.rojas@example.com",
+                "telefono": "+56955502001"
+              }
+            },
+            {
+              "id": 124,
+              "experiencia_id": 185,
+              "experiencia": {
+                "id": 185,
+                "tipo": "senderismo",
+                "titulo": "Sendero al mirador del volcán Lanín",
+                "localidad": "Curarrehue",
+                "emprendimiento": {
+                  "id": 49,
+                  "nombre": "Refugio Rural Los Coigües",
+                  "telefono_contacto": "+56955501001"
+                }
+              },
+              "fecha": "2026-11-21",
+              "noches": 1,
+              "fecha_salida": "2026-11-22",
+              "personas": 2,
+              "precio_por_persona": 25000.0,
+              "total": 50000.0,
+              "estado": "pendiente",
+              "metodo_pago": "transferencia",
+              "correo": "valentina.munoz@example.com",
+              "fecha_creacion": "2026-11-17T18:22:50.292377Z",
+              "visitante": {
+                "id": 86,
+                "nombre": "Valentina Muñoz",
+                "correo": "valentina.munoz@example.com",
+                "telefono": null
+              }
+            }
+          ],
+          "nota": ""
+        },
+        {
+          "consulta_bd": "Reservas de la visitante en el sendero",
+          "sql": "SELECT count(*) FROM reservas r JOIN usuarios u ON u.id = r.visitante_id WHERE u.correo = 'valentina.munoz@example.com' AND r.experiencia_id = 185",
+          "filas": [
+            [
+              "1"
+            ]
+          ]
+        }
+      ],
+      "ejecutado": "2026-11-17T15:23:07"
+    },
+    {
+      "id": "PI-03",
+      "flujo": "A",
+      "hu": "HU14, HU13",
+      "interfaces": "INT-02",
+      "prioridad": "Alta",
+      "escenario": "Sin disponibilidad",
+      "objetivo": "No se acepta una reserva en un día agotado.",
+      "precondiciones": "La pesca con mosca tiene su primer día abierto agotado (0 cupos) por datos_demo.",
+      "datos": "Valentina; «Pesca con mosca en el río Trancura»; día con 0 cupos; 1 persona; efectivo.",
+      "pasos": "1. Consultar la disponibilidad y ubicar el día con 0 cupos. 2. Contar reservas en la BD. 3. POST /api/reservas. 4. Volver a contar y consultar cupos.",
+      "esperado": "HTTP 409 «Esta fecha ya no tiene cupos disponibles. Elige otra»; no se crea reserva; el día sigue con 0 cupos.",
+      "evidencia": "Respuesta HTTP y conteos antes/después.",
+      "estado": "PASS",
+      "obtenido": "HTTP 409 «Esta fecha ya no tiene cupos disponibles. Elige otra»; reservas en BD 14 → 14; cupos del 2026-11-21: 0 → 0.",
+      "verificaciones": [
+        {
+          "descripcion": "HTTP 409",
+          "ok": true
+        },
+        {
+          "descripcion": "Mensaje de fecha sin cupos",
+          "ok": true
+        },
+        {
+          "descripcion": "No se crea reserva",
+          "ok": true
+        },
+        {
+          "descripcion": "El día sigue con 0 cupos",
+          "ok": true
+        }
+      ],
+      "fallidas": [],
+      "pasos_ejecutados": [
+        {
+          "peticion": "POST /api/reservas",
+          "usuario": "valentina.munoz@example.com",
+          "cuerpo": {
+            "experiencia_id": 190,
+            "fecha": "2026-11-21",
+            "personas": 1,
+            "metodo_pago": "efectivo",
+            "correo": "valentina.munoz@example.com"
+          },
+          "cabeceras_extra": {},
+          "codigo": 409,
+          "respuesta": {
+            "detail": {
+              "campo": "fecha",
+              "mensaje": "Esta fecha ya no tiene cupos disponibles. Elige otra"
+            }
+          },
+          "nota": ""
+        }
+      ],
+      "ejecutado": "2026-11-17T15:23:20"
+    },
+    {
+      "id": "PI-04",
+      "flujo": "A",
+      "hu": "HU14",
+      "interfaces": "INT-02",
+      "prioridad": "Media",
+      "escenario": "Valor límite",
+      "objetivo": "Pedir un cupo más de los que quedan se rechaza sin sobreventa.",
+      "precondiciones": "PI-01 ejecutado (el día quedó con cupos libres menores que la capacidad).",
+      "datos": "Mismo día de PI-01; personas = cupos libres + 1.",
+      "pasos": "1. Consultar cupos libres (N). 2. POST /api/reservas con N + 1 personas. 3. Contar reservas y consultar cupos.",
+      "esperado": "HTTP 409 «Solo quedan N cupos para esta fecha»; no se crea reserva; los cupos no cambian.",
+      "evidencia": "Respuesta HTTP y cupos antes/después.",
+      "estado": "PASS",
+      "obtenido": "Quedaban 8 cupos y se pidieron 9: HTTP 409 «Solo quedan 8 cupos para esta fecha»; reservas 14 → 14; cupos 8 → 8.",
+      "verificaciones": [
+        {
+          "descripcion": "HTTP 409",
+          "ok": true
+        },
+        {
+          "descripcion": "Mensaje con los cupos que quedan",
+          "ok": true
+        },
+        {
+          "descripcion": "No se crea reserva",
+          "ok": true
+        },
+        {
+          "descripcion": "Los cupos no cambian",
+          "ok": true
+        }
+      ],
+      "fallidas": [],
+      "pasos_ejecutados": [
+        {
+          "peticion": "POST /api/reservas",
+          "usuario": "valentina.munoz@example.com",
+          "cuerpo": {
+            "experiencia_id": 185,
+            "fecha": "2026-11-21",
+            "personas": 9,
+            "metodo_pago": "transferencia",
+            "correo": "valentina.munoz@example.com"
+          },
+          "cabeceras_extra": {},
+          "codigo": 409,
+          "respuesta": {
+            "detail": {
+              "campo": "personas",
+              "mensaje": "Solo quedan 8 cupos para esta fecha"
+            }
+          },
+          "nota": ""
+        }
+      ],
+      "ejecutado": "2026-11-17T15:23:32"
+    },
+    {
+      "id": "PI-05",
+      "flujo": "A",
+      "hu": "HU14",
+      "interfaces": "INT-01",
+      "prioridad": "Alta",
+      "escenario": "Datos inválidos",
+      "objetivo": "El backend rechaza entradas inválidas con un mensaje comprensible y sin crear registros.",
+      "precondiciones": "PI-01 ejecutado (se reutiliza su experiencia y fecha).",
+      "datos": "Fecha 2020-01-01; sin método de pago; 0 personas; capacidad + 1; 2 noches; correo «no-es-un-correo»; experiencia 999999.",
+      "pasos": "1. Contar reservas. 2. Enviar POST /api/reservas con cada variante. 3. Volver a contar.",
+      "esperado": "422 con el mensaje de cada regla («Esa fecha ya pasó…», «Elige cómo vas a pagar», «admite hasta N personas», «se reserva por un solo día», errores de campo) y 404 para la experiencia inexistente; ninguna reserva nueva.",
+      "evidencia": "Código y mensaje de cada respuesta; conteo de la BD.",
+      "estado": "PASS",
+      "obtenido": "fecha pasada (2020-01-01) → 422; sin método de pago en experiencia con precio → 422; personas = 0 → 422; personas = capacidad + 1 (11) → 422; 2 noches en una experiencia que no es hospedaje → 422; correo con formato inválido → 422; experiencia inexistente (id 999999) → 404; reservas en BD 14 → 14.",
+      "verificaciones": [
+        {
+          "descripcion": "fecha pasada (2020-01-01): HTTP 422 con «Esa fecha ya pasó. Elige otra»",
+          "ok": true
+        },
+        {
+          "descripcion": "sin método de pago en experiencia con precio: HTTP 422 con «Elige cómo vas a pagar»",
+          "ok": true
+        },
+        {
+          "descripcion": "personas = 0: HTTP 422 con «personas»",
+          "ok": true
+        },
+        {
+          "descripcion": "personas = capacidad + 1 (11): HTTP 422 con «Esta experiencia admite hasta 10 personas»",
+          "ok": true
+        },
+        {
+          "descripcion": "2 noches en una experiencia que no es hospedaje: HTTP 422 con «Esta experiencia se reserva por un solo día»",
+          "ok": true
+        },
+        {
+          "descripcion": "correo con formato inválido: HTTP 422 con «correo»",
+          "ok": true
+        },
+        {
+          "descripcion": "experiencia inexistente (id 999999): HTTP 404 con «Esta experiencia no está disponible para reservar»",
+          "ok": true
+        },
+        {
+          "descripcion": "Ninguna variante crea reservas",
+          "ok": true
+        }
+      ],
+      "fallidas": [],
+      "pasos_ejecutados": [
+        {
+          "peticion": "POST /api/reservas",
+          "usuario": "valentina.munoz@example.com",
+          "cuerpo": {
+            "experiencia_id": 185,
+            "fecha": "2020-01-01",
+            "personas": 1,
+            "metodo_pago": "transferencia",
+            "correo": "valentina.munoz@example.com"
+          },
+          "cabeceras_extra": {},
+          "codigo": 422,
+          "respuesta": {
+            "detail": {
+              "campo": "fecha",
+              "mensaje": "Esa fecha ya pasó. Elige otra"
+            }
+          },
+          "nota": "fecha pasada (2020-01-01)"
+        },
+        {
+          "peticion": "POST /api/reservas",
+          "usuario": "valentina.munoz@example.com",
+          "cuerpo": {
+            "experiencia_id": 185,
+            "fecha": "2026-11-21",
+            "personas": 1,
+            "metodo_pago": null,
+            "correo": "valentina.munoz@example.com"
+          },
+          "cabeceras_extra": {},
+          "codigo": 422,
+          "respuesta": {
+            "detail": {
+              "campo": "metodo_pago",
+              "mensaje": "Elige cómo vas a pagar"
+            }
+          },
+          "nota": "sin método de pago en experiencia con precio"
+        },
+        {
+          "peticion": "POST /api/reservas",
+          "usuario": "valentina.munoz@example.com",
+          "cuerpo": {
+            "experiencia_id": 185,
+            "fecha": "2026-11-21",
+            "personas": 0,
+            "metodo_pago": "transferencia",
+            "correo": "valentina.munoz@example.com"
+          },
+          "cabeceras_extra": {},
+          "codigo": 422,
+          "respuesta": {
+            "detail": [
+              {
+                "type": "greater_than_equal",
+                "loc": [
+                  "body",
+                  "personas"
+                ],
+                "msg": "Input should be greater than or equal to 1",
+                "input": 0,
+                "ctx": {
+                  "ge": 1
+                }
+              }
+            ]
+          },
+          "nota": "personas = 0"
+        },
+        {
+          "peticion": "POST /api/reservas",
+          "usuario": "valentina.munoz@example.com",
+          "cuerpo": {
+            "experiencia_id": 185,
+            "fecha": "2026-11-21",
+            "personas": 11,
+            "metodo_pago": "transferencia",
+            "correo": "valentina.munoz@example.com"
+          },
+          "cabeceras_extra": {},
+          "codigo": 422,
+          "respuesta": {
+            "detail": {
+              "campo": "personas",
+              "mensaje": "Esta experiencia admite hasta 10 personas por salida"
+            }
+          },
+          "nota": "personas = capacidad + 1 (11)"
+        },
+        {
+          "peticion": "POST /api/reservas",
+          "usuario": "valentina.munoz@example.com",
+          "cuerpo": {
+            "experiencia_id": 185,
+            "fecha": "2026-11-21",
+            "personas": 1,
+            "metodo_pago": "transferencia",
+            "correo": "valentina.munoz@example.com",
+            "noches": 2
+          },
+          "cabeceras_extra": {},
+          "codigo": 422,
+          "respuesta": {
+            "detail": {
+              "campo": "noches",
+              "mensaje": "Esta experiencia se reserva por un solo día"
+            }
+          },
+          "nota": "2 noches en una experiencia que no es hospedaje"
+        },
+        {
+          "peticion": "POST /api/reservas",
+          "usuario": "valentina.munoz@example.com",
+          "cuerpo": {
+            "experiencia_id": 185,
+            "fecha": "2026-11-21",
+            "personas": 1,
+            "metodo_pago": "transferencia",
+            "correo": "no-es-un-correo"
+          },
+          "cabeceras_extra": {},
+          "codigo": 422,
+          "respuesta": {
+            "detail": [
+              {
+                "type": "value_error",
+                "loc": [
+                  "body",
+                  "correo"
+                ],
+                "msg": "value is not a valid email address: An email address must have an @-sign.",
+                "input": "no-es-un-correo",
+                "ctx": {
+                  "reason": "An email address must have an @-sign."
+                }
+              }
+            ]
+          },
+          "nota": "correo con formato inválido"
+        },
+        {
+          "peticion": "POST /api/reservas",
+          "usuario": "valentina.munoz@example.com",
+          "cuerpo": {
+            "experiencia_id": 999999,
+            "fecha": "2026-11-21",
+            "personas": 1,
+            "metodo_pago": "transferencia",
+            "correo": "valentina.munoz@example.com"
+          },
+          "cabeceras_extra": {},
+          "codigo": 404,
+          "respuesta": {
+            "detail": {
+              "campo": "experiencia_id",
+              "mensaje": "Esta experiencia no está disponible para reservar"
+            }
+          },
+          "nota": "experiencia inexistente (id 999999)"
+        }
+      ],
+      "ejecutado": "2026-11-17T15:23:51"
+    },
+    {
+      "id": "PI-06",
+      "flujo": "A",
+      "hu": "HU01, HU14, HU15",
+      "interfaces": "INT-01",
+      "prioridad": "Alta",
+      "escenario": "Permisos",
+      "objetivo": "Solo usuarios autorizados pueden reservar y confirmar.",
+      "precondiciones": "PI-01 ejecutado (reserva pendiente de Rosa).",
+      "datos": "Sin token; Rosa (dueña); Valentina (visitante); Juan Carlos (otro anfitrión).",
+      "pasos": "1. POST /api/reservas sin token. 2. Rosa reserva su propio sendero. 3. Valentina y Juan Carlos intentan PATCH /confirmar. 4. Revisar la BD.",
+      "esperado": "401 sin sesión; 403 «No puedes reservar tu propia experiencia»; 403 para la visitante; 404 para el anfitrión ajeno; la reserva sigue pendiente.",
+      "evidencia": "Códigos HTTP y estado en la BD.",
+      "estado": "PASS",
+      "obtenido": "Sin sesión → 401; propia → 403 «No puedes reservar tu propia experiencia»; visitante confirma → 403; otro anfitrión → 404; reserva #124 sigue «pendiente».",
+      "verificaciones": [
+        {
+          "descripcion": "Sin sesión: HTTP 401",
+          "ok": true
+        },
+        {
+          "descripcion": "Reserva propia: HTTP 403 «No puedes reservar tu propia experiencia»",
+          "ok": true
+        },
+        {
+          "descripcion": "Visitante no puede confirmar: HTTP 403",
+          "ok": true
+        },
+        {
+          "descripcion": "Anfitrión ajeno no ve la reserva: HTTP 404",
+          "ok": true
+        },
+        {
+          "descripcion": "No se crean reservas",
+          "ok": true
+        },
+        {
+          "descripcion": "La reserva de PI-01 sigue pendiente",
+          "ok": true
+        }
+      ],
+      "fallidas": [],
+      "pasos_ejecutados": [
+        {
+          "peticion": "POST /api/reservas",
+          "usuario": "(sin sesión)",
+          "cuerpo": {
+            "experiencia_id": 185,
+            "fecha": "2026-11-21",
+            "personas": 1,
+            "metodo_pago": "transferencia",
+            "correo": "rosa.antinao@example.com"
+          },
+          "cabeceras_extra": {},
+          "codigo": 401,
+          "respuesta": {
+            "detail": "No autenticado o sesión expirada"
+          },
+          "nota": "sin token"
+        },
+        {
+          "peticion": "POST /api/reservas",
+          "usuario": "rosa.antinao@example.com",
+          "cuerpo": {
+            "experiencia_id": 185,
+            "fecha": "2026-11-21",
+            "personas": 1,
+            "metodo_pago": "transferencia",
+            "correo": "rosa.antinao@example.com"
+          },
+          "cabeceras_extra": {},
+          "codigo": 403,
+          "respuesta": {
+            "detail": {
+              "campo": "experiencia_id",
+              "mensaje": "No puedes reservar tu propia experiencia"
+            }
+          },
+          "nota": "la anfitriona reserva su propia experiencia"
+        },
+        {
+          "peticion": "PATCH /api/reservas/124/confirmar",
+          "usuario": "valentina.munoz@example.com",
+          "cuerpo": null,
+          "cabeceras_extra": {},
+          "codigo": 403,
+          "respuesta": {
+            "detail": "No tienes permiso para realizar esta acción"
+          },
+          "nota": "una visitante intenta confirmar"
+        },
+        {
+          "peticion": "PATCH /api/reservas/124/confirmar",
+          "usuario": "juancarlos.millalonco@example.com",
+          "cuerpo": null,
+          "cabeceras_extra": {},
+          "codigo": 404,
+          "respuesta": {
+            "detail": "Reserva no encontrada"
+          },
+          "nota": "otro anfitrión intenta confirmar"
+        }
+      ],
+      "ejecutado": "2026-11-17T15:24:08"
+    },
+    {
+      "id": "PI-07",
+      "flujo": "B",
+      "hu": "HU15, HU17",
+      "interfaces": "INT-04, INT-03",
+      "prioridad": "Alta",
+      "escenario": "Operación válida + duplicado",
+      "objetivo": "La anfitriona confirma la solicitud, se avisa por correo y no se puede confirmar dos veces.",
+      "precondiciones": "Reserva de PI-01 en estado pendiente.",
+      "datos": "Rosa Antinao; reserva de PI-01.",
+      "pasos": "1. PATCH /api/reservas/{id}/confirmar como Rosa. 2. Revisar Mailpit. 3. Repetir el PATCH. 4. Consultar la BD.",
+      "esperado": "200 «confirmada»; correo «¡Tu reserva está confirmada!…» a la visitante; la repetición da 409 «Esta reserva ya estaba confirmada».",
+      "evidencia": "Respuestas HTTP, asunto en Mailpit y estado en la BD.",
+      "estado": "PASS",
+      "obtenido": "Confirmar → 200 «confirmada»; correo sí; repetir → 409 «Esta reserva ya estaba confirmada»; BD: confirmada.",
+      "verificaciones": [
+        {
+          "descripcion": "HTTP 200 y estado confirmada",
+          "ok": true
+        },
+        {
+          "descripcion": "Correo de confirmación a la visitante",
+          "ok": true
+        },
+        {
+          "descripcion": "Segunda confirmación: HTTP 409 «Esta reserva ya estaba confirmada»",
+          "ok": true
+        },
+        {
+          "descripcion": "En la base queda confirmada",
+          "ok": true
+        }
+      ],
+      "fallidas": [],
+      "pasos_ejecutados": [
+        {
+          "peticion": "PATCH /api/reservas/124/confirmar",
+          "usuario": "rosa.antinao@example.com",
+          "cuerpo": null,
+          "cabeceras_extra": {},
+          "codigo": 200,
+          "respuesta": {
+            "id": 124,
+            "experiencia_id": 185,
+            "experiencia": {
+              "id": 185,
+              "tipo": "senderismo",
+              "titulo": "Sendero al mirador del volcán Lanín",
+              "localidad": "Curarrehue",
+              "emprendimiento": {
+                "id": 49,
+                "nombre": "Refugio Rural Los Coigües",
+                "telefono_contacto": "+56955501001"
+              }
+            },
+            "fecha": "2026-11-21",
+            "noches": 1,
+            "fecha_salida": "2026-11-22",
+            "personas": 2,
+            "precio_por_persona": 25000.0,
+            "total": 50000.0,
+            "estado": "confirmada",
+            "metodo_pago": "transferencia",
+            "correo": "valentina.munoz@example.com",
+            "fecha_creacion": "2026-11-17T18:22:50.292377Z"
+          },
+          "nota": ""
+        },
+        {
+          "peticion": "PATCH /api/reservas/124/confirmar",
+          "usuario": "rosa.antinao@example.com",
+          "cuerpo": null,
+          "cabeceras_extra": {},
+          "codigo": 409,
+          "respuesta": {
+            "detail": "Esta reserva ya estaba confirmada"
+          },
+          "nota": "segunda confirmación"
+        },
+        {
+          "consulta_bd": "Estado guardado",
+          "sql": "SELECT estado FROM reservas WHERE id = 124",
+          "filas": [
+            [
+              "confirmada"
+            ]
+          ]
+        }
+      ],
+      "ejecutado": "2026-11-17T15:24:18"
+    },
+    {
+      "id": "PI-08",
+      "flujo": "B",
+      "hu": "HU15, HU13, HU17",
+      "interfaces": "INT-04, INT-03",
+      "prioridad": "Alta",
+      "escenario": "Liberación de cupos",
+      "objetivo": "Rechazar una solicitud devuelve sus cupos y avisa al visitante.",
+      "precondiciones": "Solicitud pendiente de Sebastián Torres (4 personas) en la cocina de fogón, creada por datos_demo.",
+      "datos": "Rosa; reserva pendiente en «Cocina de fogón: catuto y sopaipillas»; correo de aviso sebastian.torres@example.com.",
+      "pasos": "1. Consultar cupos del día. 2. PATCH /rechazar como Rosa. 3. Consultar cupos. 4. Revisar Mailpit. 5. Repetir el PATCH.",
+      "esperado": "200 «rechazada»; cupos del día + 4; correo «Tu solicitud para … no fue aceptada»; la repetición da 409 «Esta reserva fue rechazada».",
+      "evidencia": "Cupos antes/después, respuestas HTTP y asunto en Mailpit.",
+      "estado": "PASS",
+      "obtenido": "Reserva #123 (4 personas, 2026-11-17): rechazar → 200; cupos 8 → 12; correo sí; repetir → 409 «Esta reserva fue rechazada».",
+      "verificaciones": [
+        {
+          "descripcion": "HTTP 200 y estado rechazada",
+          "ok": true
+        },
+        {
+          "descripcion": "Cupos del día liberados (+4)",
+          "ok": true
+        },
+        {
+          "descripcion": "Correo de rechazo al visitante",
+          "ok": true
+        },
+        {
+          "descripcion": "Segundo rechazo: HTTP 409 «Esta reserva fue rechazada»",
+          "ok": true
+        }
+      ],
+      "fallidas": [],
+      "pasos_ejecutados": [
+        {
+          "peticion": "PATCH /api/reservas/123/rechazar",
+          "usuario": "rosa.antinao@example.com",
+          "cuerpo": null,
+          "cabeceras_extra": {},
+          "codigo": 200,
+          "respuesta": {
+            "id": 123,
+            "experiencia_id": 187,
+            "experiencia": {
+              "id": 187,
+              "tipo": "gastronomia",
+              "titulo": "Cocina de fogón: catuto y sopaipillas",
+              "localidad": "Curarrehue",
+              "emprendimiento": {
+                "id": 49,
+                "nombre": "Refugio Rural Los Coigües",
+                "telefono_contacto": "+56955501001"
+              }
+            },
+            "fecha": "2026-11-17",
+            "noches": 1,
+            "fecha_salida": "2026-11-18",
+            "personas": 4,
+            "precio_por_persona": 18000.0,
+            "total": 72000.0,
+            "estado": "rechazada",
+            "metodo_pago": "efectivo",
+            "correo": "sebastian.torres@example.com",
+            "fecha_creacion": "2026-11-03T12:00:00Z"
+          },
+          "nota": ""
+        },
+        {
+          "peticion": "PATCH /api/reservas/123/rechazar",
+          "usuario": "rosa.antinao@example.com",
+          "cuerpo": null,
+          "cabeceras_extra": {},
+          "codigo": 409,
+          "respuesta": {
+            "detail": "Esta reserva fue rechazada"
+          },
+          "nota": "segundo rechazo"
+        }
+      ],
+      "ejecutado": "2026-11-17T15:24:32"
+    },
+    {
+      "id": "PI-09",
+      "flujo": "B",
+      "hu": "HU18, HU17",
+      "interfaces": "INT-05, INT-02, INT-03",
+      "prioridad": "Alta",
+      "escenario": "Operación válida",
+      "objetivo": "Un pago en línea aprobado llega por webhook y deja la reserva pagada.",
+      "precondiciones": "Reserva de PI-01 confirmada (PI-07); PROVEEDOR_PAGO=simulado.",
+      "datos": "Valentina; reserva de PI-01.",
+      "pasos": "1. POST /api/pagos. 2. POST /api/pagos/{id}/simular {aprobar: true}. 3. Consultar GET /api/pagos/{id} hasta que se resuelva. 4. Revisar la BD y Mailpit.",
+      "esperado": "201 con URL /pagos/{id}/simulado; el webhook deja el pago «aprobado»; reserva «pagada» con método «en_linea»; correo «Pago recibido: …».",
+      "evidencia": "Respuestas HTTP, filas de reservas y pagos, asunto en Mailpit.",
+      "estado": "PASS",
+      "obtenido": "Pago #49 → aprobado; BD: reserva pagada, método en_linea, pago aprobado; correo sí.",
+      "verificaciones": [
+        {
+          "descripcion": "HTTP 201 y URL de la pasarela simulada",
+          "ok": true
+        },
+        {
+          "descripcion": "Simular aprobado: HTTP 200",
+          "ok": true
+        },
+        {
+          "descripcion": "El webhook deja el pago aprobado",
+          "ok": true
+        },
+        {
+          "descripcion": "Reserva pagada con método en_linea",
+          "ok": true
+        },
+        {
+          "descripcion": "Correo «Pago recibido» a la visitante",
+          "ok": true
+        }
+      ],
+      "fallidas": [],
+      "pasos_ejecutados": [
+        {
+          "peticion": "POST /api/pagos",
+          "usuario": "valentina.munoz@example.com",
+          "cuerpo": {
+            "reserva_id": 124
+          },
+          "cabeceras_extra": {},
+          "codigo": 201,
+          "respuesta": {
+            "id": 49,
+            "url_pago": "http://localhost:8180/pagos/49/simulado"
+          },
+          "nota": ""
+        },
+        {
+          "peticion": "POST /api/pagos/49/simular",
+          "usuario": "valentina.munoz@example.com",
+          "cuerpo": {
+            "aprobar": true
+          },
+          "cabeceras_extra": {},
+          "codigo": 200,
+          "respuesta": {
+            "id": 49,
+            "reserva_id": 124,
+            "reserva": {
+              "id": 124,
+              "experiencia_id": 185,
+              "experiencia": {
+                "id": 185,
+                "tipo": "senderismo",
+                "titulo": "Sendero al mirador del volcán Lanín",
+                "localidad": "Curarrehue",
+                "emprendimiento": {
+                  "id": 49,
+                  "nombre": "Refugio Rural Los Coigües",
+                  "telefono_contacto": "+56955501001"
+                }
+              },
+              "fecha": "2026-11-21",
+              "noches": 1,
+              "fecha_salida": "2026-11-22",
+              "personas": 2,
+              "precio_por_persona": 25000.0,
+              "total": 50000.0,
+              "estado": "confirmada",
+              "metodo_pago": "transferencia",
+              "correo": "valentina.munoz@example.com",
+              "fecha_creacion": "2026-11-17T18:22:50.292377Z"
+            },
+            "proveedor": "simulado",
+            "monto": 50000.0,
+            "estado": "pendiente",
+            "fecha_creacion": "2026-11-17T18:24:37.178910Z"
+          },
+          "nota": ""
+        },
+        {
+          "peticion": "GET /api/pagos/49 (hasta que se resuelve)",
+          "usuario": "valentina.munoz@example.com",
+          "codigo": 200,
+          "respuesta": {
+            "id": 49,
+            "reserva_id": 124,
+            "reserva": {
+              "id": 124,
+              "experiencia_id": 185,
+              "experiencia": {
+                "id": 185,
+                "tipo": "senderismo",
+                "titulo": "Sendero al mirador del volcán Lanín",
+                "localidad": "Curarrehue",
+                "emprendimiento": {
+                  "id": 49,
+                  "nombre": "Refugio Rural Los Coigües",
+                  "telefono_contacto": "+56955501001"
+                }
+              },
+              "fecha": "2026-11-21",
+              "noches": 1,
+              "fecha_salida": "2026-11-22",
+              "personas": 2,
+              "precio_por_persona": 25000.0,
+              "total": 50000.0,
+              "estado": "pagada",
+              "metodo_pago": "en_linea",
+              "correo": "valentina.munoz@example.com",
+              "fecha_creacion": "2026-11-17T18:22:50.292377Z"
+            },
+            "proveedor": "simulado",
+            "monto": 50000.0,
+            "estado": "aprobado",
+            "fecha_creacion": "2026-11-17T18:24:37.178910Z"
+          }
+        },
+        {
+          "consulta_bd": "Reserva y pago",
+          "sql": "SELECT r.estado, r.metodo_pago, p.estado FROM reservas r JOIN pagos p ON p.reserva_id = r.id WHERE p.id = 49",
+          "filas": [
+            [
+              "pagada",
+              "en_linea",
+              "aprobado"
+            ]
+          ]
+        }
+      ],
+      "ejecutado": "2026-11-17T15:24:44"
+    },
+    {
+      "id": "PI-10",
+      "flujo": "B",
+      "hu": "HU18",
+      "interfaces": "INT-05",
+      "prioridad": "Media",
+      "escenario": "Pago rechazado",
+      "objetivo": "Un pago rechazado no cambia la reserva ni envía comprobante.",
+      "precondiciones": "Reserva confirmada de Camila Rojas en la cabalgata (datos_demo).",
+      "datos": "Camila (camila.rojas@example.com); «Cabalgata por el valle del río Maichín».",
+      "pasos": "1. POST /api/pagos. 2. POST /simular {aprobar: false}. 3. Consultar el pago. 4. Revisar la BD y Mailpit.",
+      "esperado": "Pago «rechazado»; la reserva sigue «confirmada»; no llega correo «Pago recibido».",
+      "evidencia": "Estado del pago, fila de la reserva y conteo de correos.",
+      "estado": "PASS",
+      "obtenido": "Reserva #111: pago #50 → rechazado; reserva sigue «confirmada»; correos de pago nuevos: 0.",
+      "verificaciones": [
+        {
+          "descripcion": "HTTP 201 al iniciar el pago",
+          "ok": true
+        },
+        {
+          "descripcion": "El webhook deja el pago rechazado",
+          "ok": true
+        },
+        {
+          "descripcion": "La reserva sigue confirmada",
+          "ok": true
+        },
+        {
+          "descripcion": "No se envía correo de pago",
+          "ok": true
+        }
+      ],
+      "fallidas": [],
+      "pasos_ejecutados": [
+        {
+          "peticion": "POST /api/pagos",
+          "usuario": "camila.rojas@example.com",
+          "cuerpo": {
+            "reserva_id": 111
+          },
+          "cabeceras_extra": {},
+          "codigo": 201,
+          "respuesta": {
+            "id": 50,
+            "url_pago": "http://localhost:8180/pagos/50/simulado"
+          },
+          "nota": ""
+        },
+        {
+          "peticion": "POST /api/pagos/50/simular",
+          "usuario": "camila.rojas@example.com",
+          "cuerpo": {
+            "aprobar": false
+          },
+          "cabeceras_extra": {},
+          "codigo": 200,
+          "respuesta": {
+            "id": 50,
+            "reserva_id": 111,
+            "reserva": {
+              "id": 111,
+              "experiencia_id": 186,
+              "experiencia": {
+                "id": 186,
+                "tipo": "cabalgata",
+                "titulo": "Cabalgata por el valle del río Maichín",
+                "localidad": "Curarrehue",
+                "emprendimiento": {
+                  "id": 49,
+                  "nombre": "Refugio Rural Los Coigües",
+                  "telefono_contacto": "+56955501001"
+                }
+              },
+              "fecha": "2026-11-19",
+              "noches": 1,
+              "fecha_salida": "2026-11-20",
+              "personas": 2,
+              "precio_por_persona": 35000.0,
+              "total": 70000.0,
+              "estado": "confirmada",
+              "metodo_pago": "transferencia",
+              "correo": "camila.rojas@example.com",
+              "fecha_creacion": "2026-11-05T12:00:00Z"
+            },
+            "proveedor": "simulado",
+            "monto": 70000.0,
+            "estado": "pendiente",
+            "fecha_creacion": "2026-11-17T18:24:51.398114Z"
+          },
+          "nota": ""
+        },
+        {
+          "peticion": "GET /api/pagos/50 (hasta que se resuelve)",
+          "usuario": "camila.rojas@example.com",
+          "codigo": 200,
+          "respuesta": {
+            "id": 50,
+            "reserva_id": 111,
+            "reserva": {
+              "id": 111,
+              "experiencia_id": 186,
+              "experiencia": {
+                "id": 186,
+                "tipo": "cabalgata",
+                "titulo": "Cabalgata por el valle del río Maichín",
+                "localidad": "Curarrehue",
+                "emprendimiento": {
+                  "id": 49,
+                  "nombre": "Refugio Rural Los Coigües",
+                  "telefono_contacto": "+56955501001"
+                }
+              },
+              "fecha": "2026-11-19",
+              "noches": 1,
+              "fecha_salida": "2026-11-20",
+              "personas": 2,
+              "precio_por_persona": 35000.0,
+              "total": 70000.0,
+              "estado": "confirmada",
+              "metodo_pago": "transferencia",
+              "correo": "camila.rojas@example.com",
+              "fecha_creacion": "2026-11-05T12:00:00Z"
+            },
+            "proveedor": "simulado",
+            "monto": 70000.0,
+            "estado": "rechazado",
+            "fecha_creacion": "2026-11-17T18:24:51.398114Z"
+          }
+        },
+        {
+          "consulta_bd": "Estado de la reserva",
+          "sql": "SELECT estado FROM reservas WHERE id = 111",
+          "filas": [
+            [
+              "confirmada"
+            ]
+          ]
+        }
+      ],
+      "ejecutado": "2026-11-17T15:25:00"
+    },
+    {
+      "id": "PI-11",
+      "flujo": "B",
+      "hu": "HU18",
+      "interfaces": "INT-05",
+      "prioridad": "Alta",
+      "escenario": "Aviso falsificado",
+      "objetivo": "El webhook rechaza avisos sin firma válida.",
+      "precondiciones": "Reserva confirmada de Camila en la cabalgata; pago pendiente recién creado.",
+      "datos": "Cuerpo {pago_id, estado: aprobado, monto} con X-Firma-Simulada inventada y sin cabecera.",
+      "pasos": "1. POST /api/pagos como Camila. 2. POST /api/pagos/webhook con firma falsa. 3. Repetir sin firma. 4. Consultar pago y reserva.",
+      "esperado": "401 «Firma inválida» en ambos; el pago sigue «pendiente» y la reserva «confirmada».",
+      "evidencia": "Respuestas HTTP y filas de pagos/reservas.",
+      "estado": "PASS",
+      "obtenido": "Aviso «aprobado» falso para el pago #51: firma inventada → 401, sin firma → 401; BD: reserva confirmada, pago pendiente.",
+      "verificaciones": [
+        {
+          "descripcion": "Firma inventada: HTTP 401 «Firma inválida»",
+          "ok": true
+        },
+        {
+          "descripcion": "Sin firma: HTTP 401",
+          "ok": true
+        },
+        {
+          "descripcion": "El pago sigue pendiente",
+          "ok": true
+        },
+        {
+          "descripcion": "La reserva sigue confirmada",
+          "ok": true
+        }
+      ],
+      "fallidas": [],
+      "pasos_ejecutados": [
+        {
+          "peticion": "POST /api/pagos",
+          "usuario": "camila.rojas@example.com",
+          "cuerpo": {
+            "reserva_id": 111
+          },
+          "cabeceras_extra": {},
+          "codigo": 201,
+          "respuesta": {
+            "id": 51,
+            "url_pago": "http://localhost:8180/pagos/51/simulado"
+          },
+          "nota": ""
+        },
+        {
+          "peticion": "POST /api/pagos/webhook",
+          "usuario": "(sin sesión)",
+          "cuerpo": "{\"pago_id\": 51, \"estado\": \"aprobado\", \"id_transaccion\": \"falso-s13\", \"monto\": \"70000.0\"}",
+          "cabeceras_extra": {
+            "X-Firma-Simulada": "0000000000000000000000000000000000000000000000000000000000000000"
+          },
+          "codigo": 401,
+          "respuesta": {
+            "detail": "Firma inválida"
+          },
+          "nota": "firma inventada"
+        },
+        {
+          "peticion": "POST /api/pagos/webhook",
+          "usuario": "(sin sesión)",
+          "cuerpo": "{\"pago_id\": 51, \"estado\": \"aprobado\", \"id_transaccion\": \"falso-s13\", \"monto\": \"70000.0\"}",
+          "cabeceras_extra": {},
+          "codigo": 401,
+          "respuesta": {
+            "detail": "Firma inválida"
+          },
+          "nota": "sin cabecera de firma"
+        },
+        {
+          "consulta_bd": "Reserva tras los avisos falsos",
+          "sql": "SELECT r.estado, p.estado FROM reservas r JOIN pagos p ON p.reserva_id = r.id WHERE p.id = 51",
+          "filas": [
+            [
+              "confirmada",
+              "pendiente"
+            ]
+          ]
+        }
+      ],
+      "ejecutado": "2026-11-17T15:25:11"
+    },
+    {
+      "id": "PI-12",
+      "flujo": "B",
+      "hu": "HU18",
+      "interfaces": "INT-05, INT-02",
+      "prioridad": "Media",
+      "escenario": "Pago no permitido",
+      "objetivo": "No se puede pagar una reserva pendiente, gratuita o ajena.",
+      "precondiciones": "datos_demo: palafito pendiente de Camila; huerta gratuita confirmada de Diego.",
+      "datos": "Camila (palafito pendiente), Diego (huerta gratuita), Valentina (reserva de Camila).",
+      "pasos": "1. POST /api/pagos para cada caso. 2. Contar pagos en la BD antes y después.",
+      "esperado": "409 para la pendiente; 409 «Esta reserva es gratuita: no hay nada que pagar»; 404 para la ajena; ningún pago nuevo.",
+      "evidencia": "Respuestas HTTP y conteo de pagos.",
+      "estado": "PASS",
+      "obtenido": "Pendiente → 409 «El anfitrión aún no confirma tu reserva. Podrás pagarla cuando la confirme»; gratuita → 409; ajena → 404; pagos en BD 6 → 6.",
+      "verificaciones": [
+        {
+          "descripcion": "Pendiente: HTTP 409",
+          "ok": true
+        },
+        {
+          "descripcion": "Gratuita: HTTP 409 «Esta reserva es gratuita: no hay nada que pagar»",
+          "ok": true
+        },
+        {
+          "descripcion": "Ajena: HTTP 404",
+          "ok": true
+        },
+        {
+          "descripcion": "No se crean pagos",
+          "ok": true
+        }
+      ],
+      "fallidas": [],
+      "pasos_ejecutados": [
+        {
+          "peticion": "POST /api/pagos",
+          "usuario": "camila.rojas@example.com",
+          "cuerpo": {
+            "reserva_id": 112
+          },
+          "cabeceras_extra": {},
+          "codigo": 409,
+          "respuesta": {
+            "detail": "El anfitrión aún no confirma tu reserva. Podrás pagarla cuando la confirme"
+          },
+          "nota": "reserva aún pendiente"
+        },
+        {
+          "peticion": "POST /api/pagos",
+          "usuario": "diego.fuentes@example.com",
+          "cuerpo": {
+            "reserva_id": 118
+          },
+          "cabeceras_extra": {},
+          "codigo": 409,
+          "respuesta": {
+            "detail": "Esta reserva es gratuita: no hay nada que pagar"
+          },
+          "nota": "reserva gratuita"
+        },
+        {
+          "peticion": "POST /api/pagos",
+          "usuario": "valentina.munoz@example.com",
+          "cuerpo": {
+            "reserva_id": 111
+          },
+          "cabeceras_extra": {},
+          "codigo": 404,
+          "respuesta": {
+            "detail": "Reserva no encontrada"
+          },
+          "nota": "reserva de otra persona"
+        }
+      ],
+      "ejecutado": "2026-11-17T15:25:27"
+    },
+    {
+      "id": "PI-13",
+      "flujo": "B",
+      "hu": "HU16, HU13",
+      "interfaces": "INT-02, INT-04",
+      "prioridad": "Media",
+      "escenario": "Cancelación",
+      "objetivo": "Cancelar una reserva devuelve los cupos y no admite más cambios.",
+      "precondiciones": "Reserva de PI-01 activa (pagada tras PI-09).",
+      "datos": "Valentina; reserva de PI-01.",
+      "pasos": "1. Consultar cupos. 2. PATCH /cancelar como Valentina. 3. Consultar cupos. 4. Repetir. 5. Rosa intenta confirmarla.",
+      "esperado": "200 «cancelada»; cupos + 2; repetir da 409 «Esta reserva ya estaba cancelada»; confirmar da 409.",
+      "evidencia": "Respuestas HTTP y cupos antes/después.",
+      "estado": "PASS",
+      "obtenido": "Cancelar → 200 «cancelada»; cupos 8 → 10; repetir → 409; confirmar → 409 «Esta reserva ya estaba cancelada».",
+      "verificaciones": [
+        {
+          "descripcion": "HTTP 200 y estado cancelada",
+          "ok": true
+        },
+        {
+          "descripcion": "Cupos del día devueltos (+2)",
+          "ok": true
+        },
+        {
+          "descripcion": "Segunda cancelación: HTTP 409 «Esta reserva ya estaba cancelada»",
+          "ok": true
+        },
+        {
+          "descripcion": "No se puede confirmar una cancelada: HTTP 409",
+          "ok": true
+        }
+      ],
+      "fallidas": [],
+      "pasos_ejecutados": [
+        {
+          "peticion": "PATCH /api/reservas/124/cancelar",
+          "usuario": "valentina.munoz@example.com",
+          "cuerpo": null,
+          "cabeceras_extra": {},
+          "codigo": 200,
+          "respuesta": {
+            "id": 124,
+            "experiencia_id": 185,
+            "experiencia": {
+              "id": 185,
+              "tipo": "senderismo",
+              "titulo": "Sendero al mirador del volcán Lanín",
+              "localidad": "Curarrehue",
+              "emprendimiento": {
+                "id": 49,
+                "nombre": "Refugio Rural Los Coigües",
+                "telefono_contacto": "+56955501001"
+              }
+            },
+            "fecha": "2026-11-21",
+            "noches": 1,
+            "fecha_salida": "2026-11-22",
+            "personas": 2,
+            "precio_por_persona": 25000.0,
+            "total": 50000.0,
+            "estado": "cancelada",
+            "metodo_pago": "en_linea",
+            "correo": "valentina.munoz@example.com",
+            "fecha_creacion": "2026-11-17T18:22:50.292377Z"
+          },
+          "nota": ""
+        },
+        {
+          "peticion": "PATCH /api/reservas/124/cancelar",
+          "usuario": "valentina.munoz@example.com",
+          "cuerpo": null,
+          "cabeceras_extra": {},
+          "codigo": 409,
+          "respuesta": {
+            "detail": "Esta reserva ya estaba cancelada"
+          },
+          "nota": "segunda cancelación"
+        },
+        {
+          "peticion": "PATCH /api/reservas/124/confirmar",
+          "usuario": "rosa.antinao@example.com",
+          "cuerpo": null,
+          "cabeceras_extra": {},
+          "codigo": 409,
+          "respuesta": {
+            "detail": "Esta reserva ya estaba cancelada"
+          },
+          "nota": "la anfitriona intenta confirmarla"
+        }
+      ],
+      "ejecutado": "2026-11-17T15:25:43"
+    },
+    {
+      "id": "PI-14",
+      "flujo": "—",
+      "hu": "HU01, HU03",
+      "interfaces": "INT-06",
+      "prioridad": "Media",
+      "escenario": "Datos inválidos + duplicado",
+      "objetivo": "El registro valida las entradas, evita duplicados y guarda la contraseña cifrada.",
+      "precondiciones": "Ninguna cuenta prueba.s13.*@example.com (se borran al restablecer).",
+      "datos": "Correo de Camila (duplicado); contraseñas «solamenteletras» y «abc1234»; sin nombre; sin correo ni teléfono; rol admin; cuenta nueva prueba.s13.<n>@example.com.",
+      "pasos": "1. POST /api/auth/registro con cada variante. 2. Registro válido. 3. Login con el correo en mayúsculas y GET /api/auth/me. 4. Consultar la BD.",
+      "esperado": "409 para el duplicado y 422 con su mensaje para el resto, sin crear la cuenta; el registro válido da 201 como visitante, el login funciona y la contraseña queda como hash bcrypt.",
+      "evidencia": "Respuestas HTTP y fila de usuarios.",
+      "estado": "PASS",
+      "obtenido": "correo ya registrado → 409; contraseña sin números → 422; contraseña de 7 caracteres → 422; visitante sin nombre → 422; sin correo ni teléfono → 422; intento de registrarse como admin → 422; registro válido → 201; login → 200; BD: ['visitante', 'Prueba Semana 13'], hash bcrypt sí.",
+      "verificaciones": [
+        {
+          "descripcion": "correo ya registrado: HTTP 409 con «Este correo ya está registrado»",
+          "ok": true
+        },
+        {
+          "descripcion": "contraseña sin números: HTTP 422 con «letras y números»",
+          "ok": true
+        },
+        {
+          "descripcion": "contraseña de 7 caracteres: HTTP 422 con «contrasena»",
+          "ok": true
+        },
+        {
+          "descripcion": "visitante sin nombre: HTTP 422 con «Ingresa tu nombre»",
+          "ok": true
+        },
+        {
+          "descripcion": "sin correo ni teléfono: HTTP 422 con «Debes indicar un correo o un teléfono»",
+          "ok": true
+        },
+        {
+          "descripcion": "intento de registrarse como admin: HTTP 422 con «rol»",
+          "ok": true
+        },
+        {
+          "descripcion": "Los intentos fallidos no crean la cuenta",
+          "ok": true
+        },
+        {
+          "descripcion": "Registro válido: HTTP 201 como visitante",
+          "ok": true
+        },
+        {
+          "descripcion": "Inicia sesión y /auth/me devuelve la cuenta",
+          "ok": true
+        },
+        {
+          "descripcion": "Una fila con la contraseña guardada como hash bcrypt",
+          "ok": true
+        }
+      ],
+      "fallidas": [],
+      "pasos_ejecutados": [
+        {
+          "peticion": "POST /api/auth/registro",
+          "usuario": "(sin sesión)",
+          "cuerpo": {
+            "correo": "camila.rojas@example.com",
+            "contrasena": "Prueba2026",
+            "nombre": "Prueba"
+          },
+          "cabeceras_extra": {},
+          "codigo": 409,
+          "respuesta": {
+            "detail": {
+              "campo": "correo",
+              "mensaje": "Este correo ya está registrado"
+            }
+          },
+          "nota": "correo ya registrado"
+        },
+        {
+          "peticion": "POST /api/auth/registro",
+          "usuario": "(sin sesión)",
+          "cuerpo": {
+            "correo": "prueba.s13.1794939943@example.com",
+            "contrasena": "solamenteletras",
+            "nombre": "Prueba"
+          },
+          "cabeceras_extra": {},
+          "codigo": 422,
+          "respuesta": {
+            "detail": [
+              {
+                "type": "value_error",
+                "loc": [
+                  "body",
+                  "contrasena"
+                ],
+                "msg": "Value error, La contraseña debe contener letras y números",
+                "input": "solamenteletras",
+                "ctx": {
+                  "error": {}
+                }
+              }
+            ]
+          },
+          "nota": "contraseña sin números"
+        },
+        {
+          "peticion": "POST /api/auth/registro",
+          "usuario": "(sin sesión)",
+          "cuerpo": {
+            "correo": "prueba.s13.1794939943@example.com",
+            "contrasena": "abc1234",
+            "nombre": "Prueba"
+          },
+          "cabeceras_extra": {},
+          "codigo": 422,
+          "respuesta": {
+            "detail": [
+              {
+                "type": "string_too_short",
+                "loc": [
+                  "body",
+                  "contrasena"
+                ],
+                "msg": "String should have at least 8 characters",
+                "input": "abc1234",
+                "ctx": {
+                  "min_length": 8
+                }
+              }
+            ]
+          },
+          "nota": "contraseña de 7 caracteres"
+        },
+        {
+          "peticion": "POST /api/auth/registro",
+          "usuario": "(sin sesión)",
+          "cuerpo": {
+            "correo": "prueba.s13.1794939943@example.com",
+            "contrasena": "Prueba2026"
+          },
+          "cabeceras_extra": {},
+          "codigo": 422,
+          "respuesta": {
+            "detail": [
+              {
+                "type": "value_error",
+                "loc": [
+                  "body",
+                  "nombre"
+                ],
+                "msg": "Value error, Ingresa tu nombre",
+                "input": null,
+                "ctx": {
+                  "error": {}
+                }
+              }
+            ]
+          },
+          "nota": "visitante sin nombre"
+        },
+        {
+          "peticion": "POST /api/auth/registro",
+          "usuario": "(sin sesión)",
+          "cuerpo": {
+            "contrasena": "Prueba2026",
+            "nombre": "Prueba"
+          },
+          "cabeceras_extra": {},
+          "codigo": 422,
+          "respuesta": {
+            "detail": [
+              {
+                "type": "value_error",
+                "loc": [
+                  "body"
+                ],
+                "msg": "Value error, Debes indicar un correo o un teléfono",
+                "input": {
+                  "contrasena": "Prueba2026",
+                  "nombre": "Prueba"
+                },
+                "ctx": {
+                  "error": {}
+                }
+              }
+            ]
+          },
+          "nota": "sin correo ni teléfono"
+        },
+        {
+          "peticion": "POST /api/auth/registro",
+          "usuario": "(sin sesión)",
+          "cuerpo": {
+            "correo": "prueba.s13.1794939943@example.com",
+            "contrasena": "Prueba2026",
+            "nombre": "Prueba",
+            "rol": "admin"
+          },
+          "cabeceras_extra": {},
+          "codigo": 422,
+          "respuesta": {
+            "detail": [
+              {
+                "type": "literal_error",
+                "loc": [
+                  "body",
+                  "rol"
+                ],
+                "msg": "Input should be 'visitante' or 'anfitrion'",
+                "input": "admin",
+                "ctx": {
+                  "expected": "'visitante' or 'anfitrion'"
+                }
+              }
+            ]
+          },
+          "nota": "intento de registrarse como admin"
+        },
+        {
+          "peticion": "POST /api/auth/registro",
+          "usuario": "(sin sesión)",
+          "cuerpo": {
+            "correo": "prueba.s13.1794939943@example.com",
+            "contrasena": "Prueba2026",
+            "nombre": "Prueba Semana 13"
+          },
+          "cabeceras_extra": {},
+          "codigo": 201,
+          "respuesta": {
+            "id": 88,
+            "nombre": "Prueba Semana 13",
+            "correo": "prueba.s13.1794939943@example.com",
+            "telefono": null,
+            "rol": "visitante",
+            "fecha_creacion": "2026-11-17T18:25:58.235344Z"
+          },
+          "nota": "registro válido"
+        },
+        {
+          "peticion": "POST /api/auth/login",
+          "usuario": "(sin sesión)",
+          "cuerpo": {
+            "identificador": "PRUEBA.S13.1794939943@EXAMPLE.COM",
+            "contrasena": "Prueba2026"
+          },
+          "cabeceras_extra": {},
+          "codigo": 200,
+          "respuesta": {
+            "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI4OCIsImV4cCI6MTc5NDk0MzU2MX0.1zgwbXAUwfH2cfimZXGsG9mwdBSVF_wfNsGc7V0iBUY",
+            "token_type": "bearer",
+            "usuario": {
+              "id": 88,
+              "nombre": "Prueba Semana 13",
+              "correo": "prueba.s13.1794939943@example.com",
+              "telefono": null,
+              "rol": "visitante",
+              "fecha_creacion": "2026-11-17T18:25:58.235344Z"
+            }
+          },
+          "nota": "login con el correo en mayúsculas"
+        },
+        {
+          "consulta_bd": "Cuenta creada",
+          "sql": "SELECT rol, nombre, contrasena_hash LIKE '$2%' FROM usuarios WHERE correo = 'prueba.s13.1794939943@example.com'",
+          "filas": [
+            [
+              "visitante",
+              "Prueba Semana 13",
+              "t"
+            ]
+          ]
+        }
+      ],
+      "ejecutado": "2026-11-17T15:26:03"
+    },
+    {
+      "id": "PI-15",
+      "flujo": "—",
+      "hu": "HU10, HU11, HU21",
+      "interfaces": "INT-01",
+      "prioridad": "Baja",
+      "escenario": "Regresión",
+      "objetivo": "Tras los casos anteriores, la web, el proxy y el catálogo siguen funcionando.",
+      "precondiciones": "App en marcha.",
+      "datos": "Rutas /, /mis-reservas, /api/health, /api/docs; filtro localidad=Curarrehue.",
+      "pasos": "1. GET / y /mis-reservas en nginx. 2. GET /api/health y /api/docs. 3. GET /api/experiencias?localidad=Curarrehue.",
+      "esperado": "HTML de la SPA en ambas rutas; salud «ok» con la base conectada; Swagger 200; el filtro solo devuelve experiencias de Curarrehue.",
+      "evidencia": "Códigos HTTP, tipo de contenido y listado filtrado.",
+      "estado": "PASS",
+      "obtenido": "/ → 200; /mis-reservas → 200; /api/health → 200 {'status': 'ok', 'base_de_datos': 'conectada'}; /api/docs → 200; filtro Curarrehue → 6 experiencias, todas de Curarrehue: True.",
+      "verificaciones": [
+        {
+          "descripcion": "Inicio servido por nginx (HTML de la SPA)",
+          "ok": true
+        },
+        {
+          "descripcion": "Ruta interna /mis-reservas devuelve la SPA (no 404)",
+          "ok": true
+        },
+        {
+          "descripcion": "/api/health a través del proxy: base conectada",
+          "ok": true
+        },
+        {
+          "descripcion": "Swagger accesible en /api/docs",
+          "ok": true
+        },
+        {
+          "descripcion": "Filtro por localidad: solo Curarrehue",
+          "ok": true
+        }
+      ],
+      "fallidas": [],
+      "pasos_ejecutados": [
+        {
+          "peticion": "GET / (nginx)",
+          "codigo": 200,
+          "content_type": "text/html",
+          "respuesta": "<!doctype html>\n<html lang=\"es\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <link rel=\"icon\" type=\"image/svg+xml\" href=\"/"
+        },
+        {
+          "peticion": "GET /mis-reservas (nginx)",
+          "codigo": 200,
+          "content_type": "text/html",
+          "respuesta": "<!doctype html>\n<html lang=\"es\">\n  <head>\n    <meta charset=\"UTF-8\" />\n    <link rel=\"icon\" type=\"image/svg+xml\" href=\"/"
+        },
+        {
+          "peticion": "GET /api/health",
+          "usuario": "(sin sesión)",
+          "cuerpo": null,
+          "cabeceras_extra": {},
+          "codigo": 200,
+          "respuesta": {
+            "status": "ok",
+            "base_de_datos": "conectada"
+          },
+          "nota": ""
+        },
+        {
+          "peticion": "GET /api/docs (nginx)",
+          "codigo": 200,
+          "content_type": "text/html; charset=utf-8",
+          "respuesta": "\n    <!DOCTYPE html>\n    <html>\n    <head>\n    <link type=\"text/css\" rel=\"stylesheet\" href=\"https://cdn.jsdelivr.net/npm"
+        },
+        {
+          "peticion": "GET /api/experiencias?localidad=Curarrehue",
+          "usuario": "(sin sesión)",
+          "cuerpo": null,
+          "cabeceras_extra": {},
+          "codigo": 200,
+          "respuesta": {
+            "items": [
+              {
+                "id": 192,
+                "emprendimiento_id": 49,
+                "emprendimiento": {
+                  "id": 49,
+                  "nombre": "Refugio Rural Los Coigües",
+                  "foto_url": "/uploads/emprendimientos/b3c978148e604330ade9b2320c20ac29.webp"
+                },
+                "tipo": "hospedaje",
+                "titulo": "Cabaña junto al río Maichín",
+                "descripcion": "Cabaña de madera nativa para hasta cuatro personas, a pasos del río y rodeada de bosque. Tiene estufa a leña, cocina equipada y una terraza con vista al volcán Lanín.\n\nLlegada desde las 15:00 y salida hasta las 11:00.\nIncluye leña, ropa de cama y desayuno de campo con pan amasado.",
+                "precio_por_persona": 28000.0,
+                "capacidad_maxima": 4,
+                "localidad": "Curarrehue",
+                "latitud": -39.3567,
+                "longitud": -71.5915,
+                "estado": "activo",
+                "fotos": [
+                  {
+                    "id": 574,
+                    "url": "/uploads/experiencias/4aa93166dc794d4a8bfae4611e969ada.webp",
+                    "orden": 0
+                  },
+                  {
+                    "id": 575,
+                    "url": "/uploads/experiencias/6739f90bc7084f6987f8e26c190904e3.webp",
+                    "orden": 1
+                  },
+                  {
+                    "id": 576,
+                    "url": "/uploads/experiencias/78ed51a6ed9c4fc48ce5684d4651fcc2.webp",
+                    "orden": 2
+                  }
+                ],
+                "fecha_creacion": "2026-11-17T18:21:49.514028Z",
+                "fecha_actualizacion": "2026-11-17T18:21:49.514028Z"
+              },
+              {
+                "id": 189,
+                "emprendimiento_id": 49,
+                "emprendimiento": {
+                  "id": 49,
+                  "nombre": "Refugio Rural Los Coigües",
+                  "foto_url": "/uploads/emprendimientos/b3c978148e604330ade9b2320c20ac29.webp"
+                },
+                "tipo": "artesania",
+                "titulo": "Taller de telar mapuche",
+                "descripcion": "Doña Rosa enseña los primeros pasos del witral (telar mapuche): preparar la urdimbre, tejer una trarilonko (faja) sencilla y conocer el significado de sus diseños.\n\nDuración: 3 horas.\nIncluye materiales; te llevas tu tejido.",
+                "precio_por_persona": 22000.0,
+                "capacidad_maxima": 6,
+                "localidad": "Curarrehue",
+                "latitud": -39.3601,
+                "longitud": -71.5893,
+                "estado": "activo",
+                "fotos": [
+                  {
+                    "id": 565,
+                    "url": "/uploads/experiencias/de7f9ab4ea7146e4a806d99461042413.webp",
+                    "orden": 0
+                  },
+                  {
+                    "id": 566,
+                    "url": "/uploads/experiencias/e60d70a329d346ee9521658c10a8d6fd.webp",
+                    "orden": 1
+                  },
+                  {
+                    "id": 567,
+                    "url": "/uploads/experiencias/ce77f3341e1f47c8928bcc528adce1f6.webp",
+                    "orden": 2
+                  }
+                ],
+                "fecha_creacion": "2026-11-17T18:21:49.514028Z",
+                "fecha_actualizacion": "2026-11-17T18:21:49.514028Z"
+              },
+              {
+                "id": 188,
+                "emprendimiento_id": 49,
+                "emprendimiento": {
+                  "id": 49,
+                  "nombre": "Refugio Rural Los Coigües",
+                  "foto_url": "/uploads/emprendimientos/b3c978148e604330ade9b2320c20ac29.webp"
+                },
+                "tipo": "agroturismo",
+                "titulo": "Un día en la huerta y el invernadero",
+                "descripcion": "Acompáñanos en las tareas de la mañana: cosechar, regar el invernadero y alimentar a las gallinas. Te llevas una bolsa con verduras de la temporada.\n\nIdeal para familias con niños.",
+                "precio_por_persona": 0.0,
+                "capacidad_maxima": 15,
+                "localidad": "Curarrehue",
+                "latitud": null,
+                "longitud": null,
+                "estado": "activo",
+                "fotos": [
+                  {
+                    "id": 562,
+                    "url": "/uploads/experiencias/4e27bd2b374348cb93a9a3dce0043fea.webp",
+                    "orden": 0
+                  },
+                  {
+                    "id": 563,
+                    "url": "/uploads/experiencias/e33b245e036d484fa208602ca60ea50b.webp",
+                    "orden": 1
+                  },
+                  {
+                    "id": 564,
+                    "url": "/uploads/experiencias/20d5c2697e544b53a1d42c7975829360.webp",
+                    "orden": 2
+                  }
+                ],
+                "fecha_creacion": "2026-11-17T18:21:49.514028Z",
+                "fecha_actualizacion": "2026-11-17T18:21:49.514028Z"
+              },
+              {
+                "id": 187,
+                "emprendimiento_id": 49,
+                "emprendimiento": {
+                  "id": 49,
+                  "nombre": "Refugio Rural Los Coigües",
+                  "foto_url": "/uploads/emprendimientos/b3c978148e604330ade9b2320c20ac29.webp"
+                },
+                "tipo": "gastronomia",
+                "titulo": "Cocina de fogón: catuto y sopaipillas",
+                "descripcion": "Aprende a preparar catuto (pan de trigo mote), sopaipillas y pebre en la cocina de fogón de la familia. Al final compartimos la mesa con lo que cocinamos.\n\nDuración: 2 horas y media.\nAvísanos si tienes alguna restricción alimentaria.",
+                "precio_por_persona": 18000.0,
+                "capacidad_maxima": 12,
+                "localidad": "Curarrehue",
+                "latitud": -39.3589,
+                "longitud": -71.5878,
+                "estado": "activo",
+                "fotos": [
+                  {
+                    "id": 559,
+                    "url": "/uploads/experiencias/e8172d2cc7bd4e1bb788e0fb9e910775.webp",
+                    "orden": 0
+                  },
+                  {
+                    "id": 560,
+                    "url": "/uploads/experiencias/3b61083d0d0c45e7b2a8b5d2feaa8cc9.webp",
+                    "orden": 1
+                  },
+                  {
+                    "id": 561,
+                    "url": "/uploads/experiencias/f936cad1e848406e821a732923fe06d5.webp",
+                    "orden": 2
+                  }
+                ],
+                "fecha_creacion": "2026-11-17T18:21:49.514028Z",
+                "fecha_actualizacion": "2026-11-17T18:21:49.514028Z"
+              },
+              {
+                "id": 186,
+                "emprendimiento_id": 49,
+                "emprendimiento": {
+                  "id": 49,
+                  "nombre": "Refugio Rural Los Coigües",
+                  "foto_url": "/uploads/emprendimientos/b3c978148e604330ade9b2320c20ac29.webp"
+                },
+                "tipo": "cabalgata",
+                "titulo": "Cabalgata por el valle del río Maichín",
+                "descripcion": "Recorrido a caballo por potreros y vados del río Maichín, con parada para tomar mate junto al fogón.\n\nNo se necesita experiencia: elegimos un caballo manso para cada visitante.\nEdad mínima: 8 años. Duración: 3 horas.",
+                "precio_por_persona": 35000.0,
+                "capacidad_maxima": 6,
+                "localidad": "Curarrehue",
+                "latitud": -39.3478,
+                "longitud": -71.5702,
+                "estado": "activo",
+                "fotos": [
+                  {
+                    "id": 556,
+                    "url": "/uploads/experiencias/0a79e00611b549a486f5edfffb15a532.webp",
+                    "orden": 0
+                  },
+                  {
+                    "id": 557,
+                    "url": "/uploads/experiencias/a5353407515e4447b356d0ebe655814c.webp",
+                    "orden": 1
+                  },
+                  {
+                    "id": 558,
+                    "url": "/uploads/experiencias/d13a3849d08e4fad8a76a6fa4535bbd9.webp",
+                    "orden": 2
+                  }
+                ],
+                "fecha_creacion": "2026-11-17T18:21:49.514028Z",
+                "fecha_actualizacion": "2026-11-17T18:21:49.514028Z"
+              },
+              {
+                "id": 185,
+                "emprendimiento_id": 49,
+                "emprendimiento": {
+                  "id": 49,
+                  "nombre": "Refugio Rural Los Coigües",
+                  "foto_url": "/uploads/emprendimientos/b3c978148e604330ade9b2320c20ac29.webp"
+                },
+                "tipo": "senderismo",
+                "titulo": "Sendero al mirador del volcán Lanín",
+                "descripcion": "Caminata de dificultad media por bosque de coigües y lengas hasta un mirador natural con vista al volcán Lanín.\n\nDuración: 5 horas (ida y vuelta).\nIncluye: guía local, colación y bastones.\nLleva: agua, cortaviento y protector solar.",
+                "precio_por_persona": 25000.0,
+                "capacidad_maxima": 10,
+                "localidad": "Curarrehue",
+                "latitud": -39.3712,
+                "longitud": -71.5541,
+                "estado": "activo",
+                "fotos": [
+                  {
+                    "id": 553,
+                    "url": "/uploads/experiencias/3ddbe493c5e043348068efb625a42927.webp",
+                    "orden": 0
+                  },
+                  {
+                    "id": 554,
+                    "url": "/uploads/experiencias/b454dd79da7b41e59fe987ab81215899.webp",
+                    "orden": 1
+                  },
+                  {
+                    "id": 555,
+                    "url": "/uploads/experiencias/4aca9e361e34443a99bdd0618610972c.webp",
+                    "orden": 2
+                  }
+                ],
+                "fecha_creacion": "2026-11-17T18:21:49.514028Z",
+                "fecha_actualizacion": "2026-11-17T18:21:49.514028Z"
+              }
+            ],
+            "total": 6,
+            "pagina": 1,
+            "por_pagina": 12,
+            "paginas": 1
+          },
+          "nota": ""
+        }
+      ],
+      "ejecutado": "2026-11-17T15:26:14"
+    }
+  ]
+}

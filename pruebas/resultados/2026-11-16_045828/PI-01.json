@@ -1,0 +1,157 @@
+{
+  "id": "PI-01",
+  "flujo": "A",
+  "hu": "HU14, HU13, HU17",
+  "interfaces": "INT-01, INT-02, INT-03",
+  "prioridad": "Alta",
+  "escenario": "Operación válida",
+  "objetivo": "Una solicitud de reserva válida se guarda, descuenta cupos y avisa por correo.",
+  "precondiciones": "Datos de datos_demo; Valentina Muñoz sin reservas en el sendero; el sendero tiene un día con 3 o más cupos.",
+  "datos": "Valentina Muñoz (valentina.munoz@example.com); «Sendero al mirador del volcán Lanín»; primer día con ≥3 cupos; 2 personas; transferencia.",
+  "pasos": "1. Iniciar sesión como Valentina. 2. Consultar cupos del día (GET /api/experiencias/{id}/disponibilidad). 3. POST /api/reservas. 4. Volver a consultar cupos. 5. Consultar la fila en reservas. 6. Revisar Mailpit.",
+  "esperado": "HTTP 201, estado «pendiente», total = precio × 2; cupos del día bajan en 2; una fila nueva en reservas; correo «Recibimos tu solicitud…» a la visitante y «Nueva solicitud de reserva…» a la anfitriona.",
+  "evidencia": "Respuesta HTTP, cupos antes/después, fila de la BD y asuntos de Mailpit.",
+  "estado": "PASS",
+  "obtenido": "HTTP 201, reserva #82 pendiente, total 50000 (25000 × 2); cupos del 2026-11-21: 10 → 8; fila en BD = ['pendiente', '2', '50000.00']; correos en Mailpit: visitante sí, anfitriona sí.",
+  "verificaciones": [
+    {
+      "descripcion": "HTTP 201",
+      "ok": true
+    },
+    {
+      "descripcion": "Estado pendiente",
+      "ok": true
+    },
+    {
+      "descripcion": "Total = precio × 2",
+      "ok": true
+    },
+    {
+      "descripcion": "Cupos del día descontados en 2",
+      "ok": true
+    },
+    {
+      "descripcion": "Fila en reservas con estado pendiente",
+      "ok": true
+    },
+    {
+      "descripcion": "Una reserva más en la base",
+      "ok": true
+    },
+    {
+      "descripcion": "Correo de acuse a la visitante",
+      "ok": true
+    },
+    {
+      "descripcion": "Correo de aviso a la anfitriona",
+      "ok": true
+    }
+  ],
+  "fallidas": [],
+  "pasos_ejecutados": [
+    {
+      "peticion": "GET /api/experiencias/116",
+      "usuario": "(sin sesión)",
+      "cuerpo": null,
+      "cabeceras_extra": {},
+      "codigo": 200,
+      "respuesta": {
+        "id": 116,
+        "emprendimiento_id": 31,
+        "emprendimiento": {
+          "id": 31,
+          "nombre": "Refugio Rural Los Coigües",
+          "localidad": "Curarrehue",
+          "descripcion": "Refugio familiar a orillas del río Maichín, rodeado de bosque nativo y con vista al volcán Lanín. Recibimos grupos pequeños para compartir el día a día del campo: la huerta, los animales, la cocina de fogón y los senderos que conocemos desde niños.",
+          "telefono_contacto": "+56955501001",
+          "redes": {
+            "whatsapp": "+56912345678",
+            "instagram": "refugioloscoigues"
+          },
+          "usuario_id": 49,
+          "foto_url": "/uploads/emprendimientos/44e46b98633c48bab6e6edd81c015cdd.webp"
+        },
+        "tipo": "senderismo",
+        "titulo": "Sendero al mirador del volcán Lanín",
+        "descripcion": "Caminata de dificultad media por bosque de coigües y lengas hasta un mirador natural con vista al volcán Lanín.\n\nDuración: 5 horas (ida y vuelta).\nIncluye: guía local, colación y bastones.\nLleva: agua, cortaviento y protector solar.",
+        "precio_por_persona": 25000.0,
+        "capacidad_maxima": 10,
+        "localidad": "Curarrehue",
+        "latitud": -39.3712,
+        "longitud": -71.5541,
+        "estado": "activo",
+        "fotos": [
+          {
+            "id": 346,
+            "url": "/uploads/experiencias/9f56fb59caba42828afa07e61e295009.webp",
+            "orden": 0
+          },
+          {
+            "id": 347,
+            "url": "/uploads/experiencias/6d60533e18cc45fb9f2a74f26da8dcfe.webp",
+            "orden": 1
+          },
+          {
+            "id": 348,
+            "url": "/uploads/experiencias/b0a79239ecd64101b27a8bce3a78fd21.webp",
+            "orden": 2
+          }
+        ],
+        "fecha_creacion": "2026-11-16T07:58:09.044184Z",
+        "fecha_actualizacion": "2026-11-16T07:58:09.044184Z"
+      },
+      "nota": ""
+    },
+    {
+      "peticion": "POST /api/reservas",
+      "usuario": "valentina.munoz@example.com",
+      "cuerpo": {
+        "experiencia_id": 116,
+        "fecha": "2026-11-21",
+        "personas": 2,
+        "metodo_pago": "transferencia",
+        "correo": "valentina.munoz@example.com"
+      },
+      "cabeceras_extra": {},
+      "codigo": 201,
+      "respuesta": {
+        "id": 82,
+        "experiencia_id": 116,
+        "experiencia": {
+          "id": 116,
+          "tipo": "senderismo",
+          "titulo": "Sendero al mirador del volcán Lanín",
+          "localidad": "Curarrehue",
+          "emprendimiento": {
+            "id": 31,
+            "nombre": "Refugio Rural Los Coigües",
+            "telefono_contacto": "+56955501001"
+          }
+        },
+        "fecha": "2026-11-21",
+        "noches": 1,
+        "fecha_salida": "2026-11-22",
+        "personas": 2,
+        "precio_por_persona": 25000.0,
+        "total": 50000.0,
+        "estado": "pendiente",
+        "metodo_pago": "transferencia",
+        "correo": "valentina.munoz@example.com",
+        "fecha_creacion": "2026-11-16T07:58:37.783984Z"
+      },
+      "nota": ""
+    },
+    {
+      "consulta_bd": "Reserva guardada",
+      "sql": "SELECT estado, personas, total FROM reservas WHERE id = 82",
+      "filas": [
+        [
+          "pendiente",
+          "2",
+          "50000.00"
+        ]
+      ]
+    }
+  ],
+  "ejecutado": "2026-11-16T04:58:44"
+}

@@ -72,6 +72,7 @@ def url_resultado(pago_id: int, exito: bool) -> str:
 
 
 def url_webhook() -> str:
+    """Dirección pública del webhook, para proveedores externos. El simulado usa la interna."""
     return f"{settings.BACKEND_URL}/pagos/webhook"
 
 

@@ -1,0 +1,77 @@
+{
+  "id": "PI-12",
+  "flujo": "B",
+  "hu": "HU18",
+  "interfaces": "INT-05, INT-02",
+  "prioridad": "Media",
+  "escenario": "Pago no permitido",
+  "objetivo": "No se puede pagar una reserva pendiente, gratuita o ajena.",
+  "precondiciones": "datos_demo: palafito pendiente de Camila; huerta gratuita confirmada de Diego.",
+  "datos": "Camila (palafito pendiente), Diego (huerta gratuita), Valentina (reserva de Camila).",
+  "pasos": "1. POST /api/pagos para cada caso. 2. Contar pagos en la BD antes y después.",
+  "esperado": "409 para la pendiente; 409 «Esta reserva es gratuita: no hay nada que pagar»; 404 para la ajena; ningún pago nuevo.",
+  "evidencia": "Respuestas HTTP y conteo de pagos.",
+  "estado": "PASS",
+  "obtenido": "Pendiente → 409 «El anfitrión aún no confirma tu reserva. Podrás pagarla cuando la confirme»; gratuita → 409; ajena → 404; pagos en BD 6 → 6.",
+  "verificaciones": [
+    {
+      "descripcion": "Pendiente: HTTP 409",
+      "ok": true
+    },
+    {
+      "descripcion": "Gratuita: HTTP 409 «Esta reserva es gratuita: no hay nada que pagar»",
+      "ok": true
+    },
+    {
+      "descripcion": "Ajena: HTTP 404",
+      "ok": true
+    },
+    {
+      "descripcion": "No se crean pagos",
+      "ok": true
+    }
+  ],
+  "fallidas": [],
+  "pasos_ejecutados": [
+    {
+      "peticion": "POST /api/pagos",
+      "usuario": "camila.rojas@example.com",
+      "cuerpo": {
+        "reserva_id": 70
+      },
+      "cabeceras_extra": {},
+      "codigo": 409,
+      "respuesta": {
+        "detail": "El anfitrión aún no confirma tu reserva. Podrás pagarla cuando la confirme"
+      },
+      "nota": "reserva aún pendiente"
+    },
+    {
+      "peticion": "POST /api/pagos",
+      "usuario": "diego.fuentes@example.com",
+      "cuerpo": {
+        "reserva_id": 76
+      },
+      "cabeceras_extra": {},
+      "codigo": 409,
+      "respuesta": {
+        "detail": "Esta reserva es gratuita: no hay nada que pagar"
+      },
+      "nota": "reserva gratuita"
+    },
+    {
+      "peticion": "POST /api/pagos",
+      "usuario": "valentina.munoz@example.com",
+      "cuerpo": {
+        "reserva_id": 69
+      },
+      "cabeceras_extra": {},
+      "codigo": 404,
+      "respuesta": {
+        "detail": "Reserva no encontrada"
+      },
+      "nota": "reserva de otra persona"
+    }
+  ],
+  "ejecutado": "2026-11-16T05:01:01"
+}

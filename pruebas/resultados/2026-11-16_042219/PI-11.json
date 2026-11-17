@@ -1,0 +1,86 @@
+{
+  "id": "PI-11",
+  "flujo": "B",
+  "hu": "HU18",
+  "interfaces": "INT-05",
+  "prioridad": "Alta",
+  "escenario": "Aviso falsificado",
+  "objetivo": "El webhook rechaza avisos sin firma válida.",
+  "precondiciones": "Reserva confirmada de Camila en la cabalgata; pago pendiente recién creado.",
+  "datos": "Cuerpo {pago_id, estado: aprobado, monto} con X-Firma-Simulada inventada y sin cabecera.",
+  "pasos": "1. POST /api/pagos como Camila. 2. POST /api/pagos/webhook con firma falsa. 3. Repetir sin firma. 4. Consultar pago y reserva.",
+  "esperado": "401 «Firma inválida» en ambos; el pago sigue «pendiente» y la reserva «confirmada».",
+  "evidencia": "Respuestas HTTP y filas de pagos/reservas.",
+  "estado": "PASS",
+  "obtenido": "Aviso «aprobado» falso para el pago #13: firma inventada → 401, sin firma → 401; BD: reserva confirmada, pago pendiente.",
+  "verificaciones": [
+    {
+      "descripcion": "Firma inventada: HTTP 401 «Firma inválida»",
+      "ok": true
+    },
+    {
+      "descripcion": "Sin firma: HTTP 401",
+      "ok": true
+    },
+    {
+      "descripcion": "El pago sigue pendiente",
+      "ok": true
+    },
+    {
+      "descripcion": "La reserva sigue confirmada",
+      "ok": true
+    }
+  ],
+  "fallidas": [],
+  "pasos_ejecutados": [
+    {
+      "peticion": "POST /api/pagos",
+      "usuario": "camila.rojas@example.com",
+      "cuerpo": {
+        "reserva_id": 27
+      },
+      "cabeceras_extra": {},
+      "codigo": 201,
+      "respuesta": {
+        "id": 13,
+        "url_pago": "http://localhost:8180/pagos/13/simulado"
+      },
+      "nota": ""
+    },
+    {
+      "peticion": "POST /api/pagos/webhook",
+      "usuario": "(sin sesión)",
+      "cuerpo": "{\"pago_id\": 13, \"estado\": \"aprobado\", \"id_transaccion\": \"falso-s13\", \"monto\": \"70000.0\"}",
+      "cabeceras_extra": {
+        "X-Firma-Simulada": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "codigo": 401,
+      "respuesta": {
+        "detail": "Firma inválida"
+      },
+      "nota": "firma inventada"
+    },
+    {
+      "peticion": "POST /api/pagos/webhook",
+      "usuario": "(sin sesión)",
+      "cuerpo": "{\"pago_id\": 13, \"estado\": \"aprobado\", \"id_transaccion\": \"falso-s13\", \"monto\": \"70000.0\"}",
+      "cabeceras_extra": {},
+      "codigo": 401,
+      "respuesta": {
+        "detail": "Firma inválida"
+      },
+      "nota": "sin cabecera de firma"
+    },
+    {
+      "consulta_bd": "Reserva tras los avisos falsos",
+      "sql": "SELECT r.estado, p.estado FROM reservas r JOIN pagos p ON p.reserva_id = r.id WHERE p.id = 13",
+      "filas": [
+        [
+          "confirmada",
+          "pendiente"
+        ]
+      ]
+    }
+  ],
+  "ejecutado": "2026-11-16T04:24:41"
+}

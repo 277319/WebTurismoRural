@@ -1,0 +1,82 @@
+{
+  "id": "PI-08",
+  "flujo": "B",
+  "hu": "HU15, HU13, HU17",
+  "interfaces": "INT-04, INT-03",
+  "prioridad": "Alta",
+  "escenario": "Liberación de cupos",
+  "objetivo": "Rechazar una solicitud devuelve sus cupos y avisa al visitante.",
+  "precondiciones": "Solicitud pendiente de Sebastián Torres (4 personas) en la cocina de fogón, creada por datos_demo.",
+  "datos": "Rosa; reserva pendiente en «Cocina de fogón: catuto y sopaipillas»; correo de aviso sebastian.torres@example.com.",
+  "pasos": "1. Consultar cupos del día. 2. PATCH /rechazar como Rosa. 3. Consultar cupos. 4. Revisar Mailpit. 5. Repetir el PATCH.",
+  "esperado": "200 «rechazada»; cupos del día + 4; correo «Tu solicitud para … no fue aceptada»; la repetición da 409 «Esta reserva fue rechazada».",
+  "evidencia": "Cupos antes/después, respuestas HTTP y asunto en Mailpit.",
+  "estado": "PASS",
+  "obtenido": "Reserva #123 (4 personas, 2026-11-17): rechazar → 200; cupos 8 → 12; correo sí; repetir → 409 «Esta reserva fue rechazada».",
+  "verificaciones": [
+    {
+      "descripcion": "HTTP 200 y estado rechazada",
+      "ok": true
+    },
+    {
+      "descripcion": "Cupos del día liberados (+4)",
+      "ok": true
+    },
+    {
+      "descripcion": "Correo de rechazo al visitante",
+      "ok": true
+    },
+    {
+      "descripcion": "Segundo rechazo: HTTP 409 «Esta reserva fue rechazada»",
+      "ok": true
+    }
+  ],
+  "fallidas": [],
+  "pasos_ejecutados": [
+    {
+      "peticion": "PATCH /api/reservas/123/rechazar",
+      "usuario": "rosa.antinao@example.com",
+      "cuerpo": null,
+      "cabeceras_extra": {},
+      "codigo": 200,
+      "respuesta": {
+        "id": 123,
+        "experiencia_id": 187,
+        "experiencia": {
+          "id": 187,
+          "tipo": "gastronomia",
+          "titulo": "Cocina de fogón: catuto y sopaipillas",
+          "localidad": "Curarrehue",
+          "emprendimiento": {
+            "id": 49,
+            "nombre": "Refugio Rural Los Coigües",
+            "telefono_contacto": "+56955501001"
+          }
+        },
+        "fecha": "2026-11-17",
+        "noches": 1,
+        "fecha_salida": "2026-11-18",
+        "personas": 4,
+        "precio_por_persona": 18000.0,
+        "total": 72000.0,
+        "estado": "rechazada",
+        "metodo_pago": "efectivo",
+        "correo": "sebastian.torres@example.com",
+        "fecha_creacion": "2026-11-03T12:00:00Z"
+      },
+      "nota": ""
+    },
+    {
+      "peticion": "PATCH /api/reservas/123/rechazar",
+      "usuario": "rosa.antinao@example.com",
+      "cuerpo": null,
+      "cabeceras_extra": {},
+      "codigo": 409,
+      "respuesta": {
+        "detail": "Esta reserva fue rechazada"
+      },
+      "nota": "segundo rechazo"
+    }
+  ],
+  "ejecutado": "2026-11-17T15:24:32"
+}
